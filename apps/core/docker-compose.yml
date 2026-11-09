@@ -14,17 +14,5 @@ services:
       - postgres_test_data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  init-test-marker:
-    image: postgres:16-alpine
-    container_name: multiplatformmsg_test_marker_init
-    depends_on:
-      - postgres
-    restart: "no"
-    entrypoint: >
-      sh -c "until pg_isready -h postgres -p 5432 -U postgres; do sleep 1; done;
-      psql -h postgres -p 5432 -U postgres -d multiplatformmsg_test -c 'CREATE TABLE IF NOT EXISTS \"__multiplatformmsg_test_marker__\" (\"marker_key\" TEXT PRIMARY KEY, \"marker_token\" TEXT NOT NULL, \"created_at\" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP); INSERT INTO \"__multiplatformmsg_test_marker__\" (\"marker_key\", \"marker_token\") VALUES (\x27TEST_ENVIRONMENT_PERMITTED\x27, \x27multiplatformmsg_dedicated_test_instance_token\x27) ON CONFLICT (\"marker_key\") DO UPDATE SET \"marker_token\" = EXCLUDED.\"marker_token\";'"
-    environment:
-      PGPASSWORD: postgres_sample_dev_pw
-
 volumes:
   postgres_test_data:

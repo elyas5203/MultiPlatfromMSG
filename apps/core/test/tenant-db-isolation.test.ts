@@ -21,8 +21,9 @@ import {
  *    tenant_id scoping and validation (assertValidTenantId). Row-Level Security (RLS)
  *    is not yet implemented and is planned for future phases.
  * 3. Fail-Closed Test Guard: Ensures the integration test runs strictly against a dedicated
- *    test database containing an externally pre-provisioned test marker table and token.
- *    The test code NEVER creates or inserts the marker; it strictly SELECTs and verifies.
+ *    test database containing an externally pre-provisioned test marker table and matching runtime token.
+ *    There is NO public or hardcoded default token; TEST_DATABASE_MARKER_TOKEN is strictly mandatory.
+ *    The test code NEVER creates or inserts the marker table or records; it strictly SELECTs and verifies.
  *    If verification fails, `isTargetVerified` remains false, and no database mutations or
  *    cleanup routines are executed.
  * 4. Zero Credential / DB Name Leakage: Error messages and logs never output sensitive
@@ -33,7 +34,6 @@ import {
 
 export const TEST_MARKER_TABLE = '__multiplatformmsg_test_marker__';
 export const TEST_MARKER_KEY = 'TEST_ENVIRONMENT_PERMITTED';
-export const DEFAULT_EXPECTED_MARKER_TOKEN = 'multiplatformmsg_dedicated_test_instance_token';
 
 export class InsecureDatabaseTargetError extends Error {
   constructor(message = 'Refusing to run tests: Target database is not verified as a dedicated test database.') {
@@ -100,16 +100,27 @@ export function validateDatabaseName(dbName: string | undefined): void {
 /**
  * Verifies that the target database contains a pre-provisioned test marker table and matching token.
  * Strictly executes SELECT queries only; NEVER executes CREATE TABLE or INSERT.
+ *
+ * NOTE: expectedToken is strictly required from environment (no static or hardcoded default fallback).
  */
 export async function assertPreProvisionedTestDatabaseMarker(
   prisma: { $queryRawUnsafe: (query: string, ...args: any[]) => Promise<any> },
-  expectedToken: string = process.env.TEST_DATABASE_MARKER_TOKEN || DEFAULT_EXPECTED_MARKER_TOKEN,
+  explicitToken?: string,
 ): Promise<void> {
+  const expectedToken = explicitToken !== undefined ? explicitToken : process.env.TEST_DATABASE_MARKER_TOKEN;
+  if (!expectedToken || typeof expectedToken !== 'string' || expectedToken.trim().length === 0) {
+    throw new InsecureDatabaseTargetError(
+      'TEST_DATABASE_MARKER_TOKEN environment variable is missing or empty. Test target cannot be verified without a dedicated token.',
+    );
+  }
+
+  const trimmedExpectedToken = expectedToken.trim();
+
   let rows: { marker_key: string; marker_token: string }[];
   try {
     rows = (await prisma.$queryRawUnsafe(
       `SELECT "marker_key", "marker_token" FROM "${TEST_MARKER_TABLE}" WHERE "marker_key" = $1 LIMIT 1`,
-      TEST_MARKER_KEY
+      TEST_MARKER_KEY,
     )) as { marker_key: string; marker_token: string }[];
   } catch {
     // Table missing or SQL query error -> fail closed without printing sensitive details
@@ -124,7 +135,7 @@ export async function assertPreProvisionedTestDatabaseMarker(
     );
   }
 
-  if (rows[0].marker_token !== expectedToken) {
+  if (rows[0].marker_token !== trimmedExpectedToken) {
     throw new InsecureDatabaseTargetError(
       'Target database test marker token mismatch. Refusing execution.',
     );
@@ -180,7 +191,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
     const currentDb = dbNameRows[0]?.current_database;
     validateDatabaseName(currentDb);
 
-    // 5. Assert fail-closed pre-provisioned marker verification (pure SELECT, no CREATE/INSERT)
+    // 5. Assert fail-closed pre-provisioned marker verification (pure SELECT, no CREATE/INSERT, token strictly validated)
     await assertPreProvisionedTestDatabaseMarker(prisma);
 
     // All safety gates passed: authorize mutations strictly for this test run
@@ -297,6 +308,41 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
   });
 
   describe('Pre-Provisioned Safety Marker Verification (Safety Guard Negative Tests)', () => {
+    it('must reject execution when marker token is missing or empty in environment', async () => {
+      const savedToken = process.env.TEST_DATABASE_MARKER_TOKEN;
+      try {
+        delete process.env.TEST_DATABASE_MARKER_TOKEN;
+        await assert.rejects(
+          async () => {
+            await assertPreProvisionedTestDatabaseMarker(prisma);
+          },
+          (err: unknown) => {
+            assert.ok(err instanceof InsecureDatabaseTargetError);
+            const msg = (err as Error).message;
+            assert.strictEqual(msg.includes('missing or empty'), true);
+            return true;
+          },
+        );
+
+        process.env.TEST_DATABASE_MARKER_TOKEN = '   ';
+        await assert.rejects(
+          async () => {
+            await assertPreProvisionedTestDatabaseMarker(prisma);
+          },
+          (err: unknown) => {
+            assert.ok(err instanceof InsecureDatabaseTargetError);
+            const msg = (err as Error).message;
+            assert.strictEqual(msg.includes('missing or empty'), true);
+            return true;
+          },
+        );
+      } finally {
+        if (savedToken !== undefined) {
+          process.env.TEST_DATABASE_MARKER_TOKEN = savedToken;
+        }
+      }
+    });
+
     it('must reject execution when marker token mismatches expected value', async () => {
       await assert.rejects(
         async () => {
@@ -320,7 +366,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
 
       await assert.rejects(
         async () => {
-          await assertPreProvisionedTestDatabaseMarker(mockPrismaMissingTable);
+          await assertPreProvisionedTestDatabaseMarker(mockPrismaMissingTable, 'any_valid_token');
         },
         (err: unknown) => {
           assert.ok(err instanceof InsecureDatabaseTargetError);
@@ -338,7 +384,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
 
       await assert.rejects(
         async () => {
-          await assertPreProvisionedTestDatabaseMarker(mockPrismaEmptyRows);
+          await assertPreProvisionedTestDatabaseMarker(mockPrismaEmptyRows, 'any_valid_token');
         },
         (err: unknown) => {
           assert.ok(err instanceof InsecureDatabaseTargetError);

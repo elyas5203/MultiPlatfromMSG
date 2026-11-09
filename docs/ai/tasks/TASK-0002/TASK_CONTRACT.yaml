@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0002
 title: "پیش‌نویس مدل مفهومی داده و جداسازی سازمان، برند، تیم و منابع مشترک"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-elyas
 reviewer: chatgpt
@@ -101,3 +101,16 @@ manager_approval:
   approval_note: >
     طبق تأیید مالک برای اجرای docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md؛
     مأموریت مستندسازی روشن و محدود، مناسب Antigravity، با بازبینی Codex/ChatGPT.
+
+closure:
+  closed_at: "2026-11-09"
+  independent_review_verdict: APPROVED
+  final_manager_vote: APPROVED
+  evidence:
+    - docs/ai/tasks/TASK-0002/IMPLEMENTATION_REPORT.md
+    - docs/ai/tasks/TASK-0002/REVIEW_REPORT.md
+  doc_sync_note: >
+    محتوای نهایی DRAFT_DATA_MODEL.md (پس از اصلاح یافته‌های DM-01 و DM-02)
+    توسط مدیر در docs/ai/architecture/DATA_MODEL.md منتقل شد، با یادداشت
+    صریح اینکه جزئیات فنی تشخیص «ارجاع قطعی و قابل‌ردیابی» خطر باقی‌مانده
+    است و نیازمند طراحی/آزمایش بعدی، نه تصمیم نهایی پیاده‌سازی.

@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0003
 title: "پیش‌نویس ماتریس نقش‌ها و دسترسی‌های انسانی"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-9
 reviewer: chatgpt
@@ -101,3 +101,16 @@ manager_approval:
   approval_note: >
     طبق تأیید مالک برای اجرای docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md؛
     مأموریت مستندسازی روشن و محدود، با حساسیت امنیتی/دسترسی، بازبینی Codex/ChatGPT الزامی.
+
+closure:
+  closed_at: "2026-11-09"
+  independent_review_verdict: APPROVED
+  final_manager_vote: APPROVED
+  evidence:
+    - docs/ai/tasks/TASK-0003/IMPLEMENTATION_REPORT.md
+    - docs/ai/tasks/TASK-0003/REVIEW_REPORT.md
+  doc_sync_note: >
+    محتوای نهایی DRAFT_ROLES_MATRIX.md (پس از اصلاح یافته‌های RM-01 و RM-02)
+    توسط مدیر در docs/ai/product/ROLES_AND_PERMISSIONS.md منتقل شد، با
+    یادداشت صریح اینکه موارد با برچسب «پیشنهادی، نیازمند تأیید مالک» تصمیم
+    نهایی نیستند و پیش از پیاده‌سازی RBAC نیاز به تأیید صریح مالک دارند.

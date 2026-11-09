@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0005
 title: "پیش‌نویس مفهومی دفتر رویداد مالی و تعریف رویداد قابل‌صورتحساب"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: chatgpt
 reviewer: antigraviti-elyas
@@ -116,3 +116,16 @@ manager_approval:
     واگذار شد)، این Task تأیید و به implementer واگذار می‌شود. implementer
     به‌دلیل حساسیت معماری/حسابداری مالی عمداً chatgpt انتخاب شده، نه یک
     Antigravity؛ reviewer مستقل و غیر از chatgpt (antigraviti-elyas) است.
+
+closure:
+  closed_at: "2026-11-09"
+  independent_review_verdict: APPROVED
+  final_manager_vote: APPROVED
+  evidence:
+    - docs/ai/tasks/TASK-0005/IMPLEMENTATION_REPORT.md
+    - docs/ai/tasks/TASK-0005/REVIEW_REPORT.md
+  doc_sync_note: >
+    محتوای نهایی DRAFT_BILLING_EVENTS.md توسط مدیر (نه implementer) به‌صورت
+    افزوده («افزوده: انواع رویداد دفتر مالی و جلوگیری از ثبت دوباره هزینه
+    (TASK-0005)») در docs/ai/product/BILLING_AND_CREDITS.md ادغام شد؛
+    نسخه سند به 0.2.0 ارتقا یافت. هیچ عدد قیمت/تعرفه/سقف ثابتی اضافه نشد.

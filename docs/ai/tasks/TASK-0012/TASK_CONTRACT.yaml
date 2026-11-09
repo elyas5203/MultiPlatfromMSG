@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0012
 title: "فاز ۱ الف — اسکلت محلی Core و آزمون مرز سازمانی"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-15
 reviewer: chatgpt
@@ -87,6 +87,19 @@ stop_conditions:
   - "نیاز به فایل یا dependency خارج از فهرست مجاز"
   - "نیاز به تغییر دیتابیس، schema، قرارداد عمومی یا تصمیم نقش/ورود"
   - "تست اجباری اجرا نشود یا Secret/داده واقعی دیده شود"
+closure:
+  final_commit: "642bd53de1d2dbd7935b72ff4cc357354ea9586a"
+  merge_commit_branch: "main"
+  independent_review_rounds: 3
+  round_1_commit: "5213264"
+  round_1_vote: "CHANGES_REQUESTED"
+  round_2_commit: "2977372"
+  round_2_vote: "CHANGES_REQUESTED"
+  round_3_commit: "642bd53de1d2dbd7935b72ff4cc357354ea9586a"
+  round_3_vote: "APPROVED"
+  reviewer: "chatgpt"
+  implementer: "antigraviti-15"
+  compliance_note: "During rework, the shared manager working folder (E:/projects/MultiPlatformMsg) was found checked out on this task's branch twice (a declared stop_condition); no uncommitted work was lost, the manager restored it to main both times, and the implementer was instructed to use only its own isolated working folder going forward."
 manager_approval:
   verdict: APPROVED
   approved_at: "2026-11-09"

@@ -46,6 +46,17 @@ export function assertValidTenantId(tenantId: unknown): string {
   return trimmed;
 }
 
+/**
+ * Deep clones serializable records / payloads using structuredClone or fallback.
+ * Guarantees that internal storage and returned records never share mutable references across calls or tenants.
+ */
+function deepClone<T>(val: T): T {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(val);
+  }
+  return JSON.parse(JSON.stringify(val)) as T;
+}
+
 @Injectable()
 export class InMemoryTenantScopeRepository {
   private readonly records = new Map<string, TenantScopedRecord>();
@@ -61,13 +72,16 @@ export class InMemoryTenantScopeRepository {
     const record: TenantScopedRecord = {
       id: trimmedId,
       tenantId: validTenantId,
-      payload: { ...payload },
+      payload: deepClone(payload),
       createdAt: new Date(),
     };
 
     // Stored uniquely by tenantId:id composite key to guarantee complete in-memory isolation
     this.records.set(this.compositeKey(validTenantId, trimmedId), record);
-    return { ...record };
+    return {
+      ...record,
+      payload: deepClone(record.payload),
+    };
   }
 
   findById(tenantId: unknown, id: string): TenantScopedRecord | null {
@@ -90,7 +104,10 @@ export class InMemoryTenantScopeRepository {
       return null;
     }
 
-    return { ...found };
+    return {
+      ...found,
+      payload: deepClone(found.payload),
+    };
   }
 
   findAll(tenantId: unknown): TenantScopedRecord[] {
@@ -99,7 +116,10 @@ export class InMemoryTenantScopeRepository {
     const results: TenantScopedRecord[] = [];
     for (const record of this.records.values()) {
       if (record.tenantId === validTenantId) {
-        results.push({ ...record });
+        results.push({
+          ...record,
+          payload: deepClone(record.payload),
+        });
       }
     }
 
@@ -117,7 +137,24 @@ export class InMemoryTenantScopeRepository {
     return count;
   }
 
-  clear(): void {
+  /**
+   * Clears records strictly within the boundary of a specific tenant.
+   * Cross-tenant wipe is strictly prohibited by architectural governance.
+   */
+  clearTenant(tenantId: unknown): void {
+    const validTenantId = assertValidTenantId(tenantId);
+    for (const [key, record] of this.records.entries()) {
+      if (record.tenantId === validTenantId) {
+        this.records.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Internal test harness utility: resets all in-memory entries between test suites.
+   * Explicitly marked and restricted for test harness environments only.
+   */
+  _testResetAllForTestingOnly(): void {
     this.records.clear();
   }
 

@@ -89,6 +89,81 @@ describe('Tenant Scope In-Memory Repository & Boundary Verification', () => {
       assert.strictEqual(repository.countByTenant(TENANT_ALPHA), 2);
       assert.strictEqual(repository.countByTenant(TENANT_BETA), 1);
     });
+
+    it('must prevent shared mutable references and cross-tenant mutation leak via deep copy (Regression Test)', () => {
+      // Shared synthetic nested payload object
+      const nestedSharedPayload = {
+        meta: {
+          tag: 'original-nested-tag',
+          details: { nestedCounter: 100 },
+        },
+      };
+
+      // Both tenants save records that originally reference identical payload structure
+      repository.save(TENANT_ALPHA, 'doc-shared-nested', nestedSharedPayload);
+      repository.save(TENANT_BETA, 'doc-shared-nested', nestedSharedPayload);
+
+      // Mutate the original input object after save
+      (nestedSharedPayload.meta.details as { nestedCounter: number }).nestedCounter = 999;
+      (nestedSharedPayload.meta as { tag: string }).tag = 'corrupted-input';
+
+      // Read back Tenant Alpha's record
+      const readAlpha = repository.findById(TENANT_ALPHA, 'doc-shared-nested');
+      assert.ok(readAlpha);
+      assert.strictEqual(
+        (readAlpha?.payload.meta as { tag: string }).tag,
+        'original-nested-tag',
+        'Saved record must not be affected by mutation of original input object',
+      );
+
+      // Mutate the returned payload object from Tenant Alpha's read
+      (readAlpha?.payload.meta as { tag: string }).tag = 'mutated-by-alpha-consumer';
+      ((readAlpha?.payload.meta as Record<string, unknown>).details as { nestedCounter: number }).nestedCounter = 888;
+
+      // Read back Tenant Beta's record and verify complete absence of reference leak
+      const readBeta = repository.findById(TENANT_BETA, 'doc-shared-nested');
+      assert.ok(readBeta);
+      assert.strictEqual(
+        (readBeta?.payload.meta as { tag: string }).tag,
+        'original-nested-tag',
+        'Tenant Beta record must not reflect mutation performed on Tenant Alpha returned payload',
+      );
+      assert.strictEqual(
+        ((readBeta?.payload.meta as Record<string, unknown>).details as { nestedCounter: number }).nestedCounter,
+        100,
+        'Tenant Beta nested details counter must remain unaffected',
+      );
+
+      // Second read of Tenant Alpha must also be untainted by prior consumer mutation
+      const secondReadAlpha = repository.findById(TENANT_ALPHA, 'doc-shared-nested');
+      assert.strictEqual(
+        (secondReadAlpha?.payload.meta as { tag: string }).tag,
+        'original-nested-tag',
+        'Internal repository storage must remain untainted by external consumer mutations',
+      );
+    });
+
+    it('must strictly enforce tenant boundary during clearTenant operations', () => {
+      repository.save(TENANT_ALPHA, 'doc-a1', { label: 'A1' });
+      repository.save(TENANT_ALPHA, 'doc-a2', { label: 'A2' });
+      repository.save(TENANT_BETA, 'doc-b1', { label: 'B1' });
+
+      // Clear only Tenant Alpha records
+      repository.clearTenant(TENANT_ALPHA);
+
+      assert.strictEqual(repository.countByTenant(TENANT_ALPHA), 0);
+      assert.strictEqual(repository.findById(TENANT_ALPHA, 'doc-a1'), null);
+
+      // Tenant Beta must be completely intact
+      assert.strictEqual(repository.countByTenant(TENANT_BETA), 1);
+      assert.strictEqual(repository.findById(TENANT_BETA, 'doc-b1')?.payload.label, 'B1');
+
+      // clearTenant without valid tenantId must throw
+      assert.throws(
+        () => repository.clearTenant(null),
+        (err: unknown) => err instanceof TenantScopeMissingError,
+      );
+    });
   });
 
   describe('Missing tenant_id Rejection (AC-02)', () => {

@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0008
 title: "ممیزی تناقض و پوشش اسناد مادر پیش از کدنویسی"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: chatgpt
 reviewer: antigraviti-9
@@ -97,3 +97,8 @@ manager_approval:
   verdict: APPROVED
   approved_at: "2026-11-09"
   approval_note: "هفت مأموریت سندی بسته شده‌اند؛ ممیزی نهایی شرط پیش از درخواست مجوز کدنویسی است."
+manager_final_verdict:
+  verdict: APPROVED
+  reviewed_commit: "822bc40fa4d29d8195be5398d641eece2f489af0"
+  decided_at: "2026-11-09"
+  note: "گزارش ممیزی پذیرفته شد؛ یافته‌های F-01 و F-03 هنوز مانع پایان تحلیل هستند."

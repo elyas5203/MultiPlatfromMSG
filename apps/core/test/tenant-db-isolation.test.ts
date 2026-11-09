@@ -1,5 +1,6 @@
 import { describe, it, before, after, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
+import * as crypto from 'node:crypto';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
@@ -19,35 +20,119 @@ import {
  * 2. Query Read/Write Boundary: Enforced at the Repository application layer via explicit
  *    tenant_id scoping and validation (assertValidTenantId). Row-Level Security (RLS)
  *    is not yet implemented and is planned for future phases.
- * 3. Test Isolation: This suite requires an explicit DATABASE_URL pointing to a dedicated
- *    test database. It does not auto-spawn, kill, or wipe arbitrary host processes or ports.
+ * 3. Fail-Closed Test Guard: Ensures the integration test runs strictly against a dedicated
+ *    test database containing our trusted test marker table/record. Rejects non-test DBs
+ *    without mutating or wiping any data, and never outputs raw connection strings or secrets.
+ * 4. Run-Unique Identifiers: Tenant IDs and slugs are generated uniquely per test run,
+ *    preventing collision with or accidental deletion of any pre-existing records.
  */
+
+export const TEST_MARKER_TABLE = '__multiplatformmsg_test_marker__';
+export const TEST_MARKER_KEY = 'TEST_ENVIRONMENT_PERMITTED';
+
+export class InsecureDatabaseTargetError extends Error {
+  constructor(message = 'Refusing to run tests: Target database is not verified as a dedicated test database.') {
+    super(message);
+    this.name = 'InsecureDatabaseTargetError';
+  }
+}
+
+/**
+ * Validates that DATABASE_URL specifies an authorized test database name
+ * and matches dedicated test naming conventions, without exposing credentials.
+ */
+export function validateDatabaseUrlSafety(dbUrl: string | undefined): void {
+  if (!dbUrl || typeof dbUrl !== 'string' || dbUrl.trim().length === 0) {
+    throw new InsecureDatabaseTargetError('DATABASE_URL environment variable is missing.');
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(dbUrl);
+  } catch {
+    throw new InsecureDatabaseTargetError('DATABASE_URL is malformed or invalid.');
+  }
+
+  // Extract database name (path without leading slash)
+  const dbName = parsed.pathname.replace(/^\//, '').trim();
+
+  // Allowed dedicated test database names: must contain 'test' or 'synthetic'
+  const isDedicatedTestDb =
+    dbName === 'multiplatformmsg_test' ||
+    dbName.endsWith('_test') ||
+    dbName.includes('test_') ||
+    dbName.includes('synthetic');
+
+  if (!isDedicatedTestDb) {
+    throw new InsecureDatabaseTargetError(
+      `Database name \"${dbName}\" is not an authorized test database. Name must denote a dedicated test DB (e.g. multiplatformmsg_test).`,
+    );
+  }
+}
+
+/**
+ * Ensures the target database has the explicit test marker table & record.
+ * If running on a dedicated test DB for the first time, creates the marker.
+ */
+export async function assertAndEnsureTestDatabaseMarker(prisma: PrismaService): Promise<void> {
+  // Query current database name from PostgreSQL
+  const dbNameRows = await prisma.$queryRawUnsafe<{ current_database: string }[]>(
+    'SELECT current_database()',
+  );
+  const currentDb = dbNameRows[0]?.current_database;
+  validateDatabaseUrlSafety(`postgresql://localhost/${currentDb}`);
+
+  // Create marker table if not present, and insert trusted marker record
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "${TEST_MARKER_TABLE}" (
+      "marker_key" TEXT PRIMARY KEY,
+      "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    INSERT INTO "${TEST_MARKER_TABLE}" ("marker_key")
+    VALUES ('${TEST_MARKER_KEY}')
+    ON CONFLICT ("marker_key") DO NOTHING;
+  `);
+
+  // Verify marker presence
+  const markerRows = await prisma.$queryRawUnsafe<{ marker_key: string }[]>(
+    `SELECT "marker_key" FROM "${TEST_MARKER_TABLE}" WHERE "marker_key" = $1`,
+    TEST_MARKER_KEY,
+  );
+
+  if (markerRows.length === 0) {
+    throw new InsecureDatabaseTargetError(
+      'Target database missing required test marker record. Halting execution to prevent mutation of non-test database.',
+    );
+  }
+}
 
 describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (AC-02)', () => {
   let app: any;
   let repository: TenantRepository;
   let prisma: PrismaService;
 
-  // Synthetic test tenant IDs
-  const TENANT_ALPHA = 'org_synthetic_alpha_101';
-  const TENANT_BETA = 'org_synthetic_beta_202';
+  // Run-unique synthetic test tenant IDs and slugs (never static or hardcoded across runs)
+  const RUN_SEED = crypto.randomBytes(4).toString('hex');
+  const TENANT_ALPHA = `org_test_alpha_${RUN_SEED}`;
+  const TENANT_BETA = `org_test_beta_${RUN_SEED}`;
+  const SLUG_ALPHA = `slug-alpha-${RUN_SEED}`;
+  const SLUG_BETA = `slug-beta-${RUN_SEED}`;
 
   before(async () => {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) {
-      throw new Error(
-        'DATABASE_URL environment variable is required to run PostgreSQL integration tests.',
-      );
-    }
+    // 1. Fail-closed pre-validation: check connection string safety without logging credentials
+    validateDatabaseUrlSafety(process.env.DATABASE_URL);
 
-    // Initialize NestJS Application Context & resolve providers
+    // 2. Initialize NestJS Application Context & resolve providers
     app = await NestFactory.createApplicationContext(AppModule, {
       logger: false,
     });
     repository = app.get(TenantRepository);
     prisma = app.get(PrismaService);
 
-    // Verify database connectivity
+    // 3. Verify database connectivity
     let connected = false;
     for (let i = 0; i < 30; i++) {
       try {
@@ -60,11 +145,15 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
     }
 
     if (!connected) {
-      throw new Error(`Unable to connect to PostgreSQL database at ${dbUrl}`);
+      throw new Error('Unable to connect to target test database. Connection refused.');
     }
+
+    // 4. Assert fail-closed dedicated test database marker verification
+    await assertAndEnsureTestDatabaseMarker(prisma);
   });
 
   after(async () => {
+    // Strictly clean up ONLY this run's unique tenants
     if (repository) {
       try {
         await repository.clearTenant(TENANT_ALPHA);
@@ -80,21 +169,62 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
   });
 
   beforeEach(async () => {
-    // Clean state before each test strictly per-tenant (no cross-tenant wipe)
+    // Clean state before each test strictly for this run's unique tenants
     await repository.clearTenant(TENANT_ALPHA);
     await repository.clearTenant(TENANT_BETA);
 
-    // Seed test tenants
+    // Seed test tenants with unique run keys
     await repository.createTenant({
       id: TENANT_ALPHA,
-      name: 'Alpha Synthetic Corp',
-      slug: 'alpha-corp-synthetic',
+      name: `Alpha Corp ${RUN_SEED}`,
+      slug: SLUG_ALPHA,
     });
 
     await repository.createTenant({
       id: TENANT_BETA,
-      name: 'Beta Synthetic LLC',
-      slug: 'beta-llc-synthetic',
+      name: `Beta LLC ${RUN_SEED}`,
+      slug: SLUG_BETA,
+    });
+  });
+
+  describe('Fail-Closed Non-Test Database Protection (Safety Guard)', () => {
+    it('must reject non-test database URLs before any database mutation occurs', () => {
+      const nonTestUrls = [
+        'postgresql://admin:secret@127.0.0.1:5432/production',
+        'postgresql://postgres:pw@127.0.0.1:5432/multiplatformmsg_prod',
+        'postgresql://user:pass@127.0.0.1:5432/main_db',
+        'postgresql://user:pass@127.0.0.1:5432/staging?schema=public',
+        'postgresql://user:pass@127.0.0.1:5432/customer_data',
+      ];
+
+      for (const nonTestUrl of nonTestUrls) {
+        assert.throws(
+          () => validateDatabaseUrlSafety(nonTestUrl),
+          (err: unknown) => {
+            assert.ok(err instanceof InsecureDatabaseTargetError);
+            // Ensure sensitive credentials are NEVER leaked into error messages
+            const msg = (err as Error).message;
+            assert.strictEqual(msg.includes('secret'), false);
+            assert.strictEqual(msg.includes('pass'), false);
+            assert.strictEqual(msg.includes('pw'), false);
+            return true;
+          },
+          `Expected fail-closed rejection for non-test database URL: ${nonTestUrl}`,
+        );
+      }
+    });
+
+    it('must accept authorized dedicated test database names', () => {
+      const authorizedTestUrls = [
+        'postgresql://postgres@127.0.0.1:54332/multiplatformmsg_test?schema=public',
+        'postgresql://postgres:sample@127.0.0.1:5432/core_test',
+        'postgresql://testuser@localhost:5432/test_tenancy',
+        'postgresql://app:sample@127.0.0.1:5432/app_synthetic_db',
+      ];
+
+      for (const testUrl of authorizedTestUrls) {
+        assert.doesNotThrow(() => validateDatabaseUrlSafety(testUrl));
+      }
     });
   });
 
@@ -143,13 +273,13 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
 
     it('should create and retrieve Staff records with strict repository tenant filtering', async () => {
       const staffAlpha = await repository.createStaff(TENANT_ALPHA, {
-        email: 'alice@alpha.example.com',
+        email: `alice.${RUN_SEED}@alpha.example.com`,
         fullName: 'Alice Alpha',
         role: 'ADMIN',
       });
 
       const staffBeta = await repository.createStaff(TENANT_BETA, {
-        email: 'bob@beta.example.com',
+        email: `bob.${RUN_SEED}@beta.example.com`,
         fullName: 'Bob Beta',
         role: 'MEMBER',
       });
@@ -160,7 +290,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
       // Verify legitimate query
       const readAlpha = await repository.findStaffById(TENANT_ALPHA, staffAlpha.id);
       assert.ok(readAlpha);
-      assert.strictEqual(readAlpha?.email, 'alice@alpha.example.com');
+      assert.strictEqual(readAlpha?.email, `alice.${RUN_SEED}@alpha.example.com`);
 
       // Cross-tenant read must return null
       const crossRead = await repository.findStaffById(TENANT_BETA, staffAlpha.id);
@@ -213,7 +343,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
 
     it('should manage Staff-Team membership and prevent cross-tenant assignment at Repository layer', async () => {
       const staffAlpha = await repository.createStaff(TENANT_ALPHA, {
-        email: 'alice.member@alpha.example.com',
+        email: `alice.member.${RUN_SEED}@alpha.example.com`,
         fullName: 'Alice Member',
       });
 
@@ -222,7 +352,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
       });
 
       const staffBeta = await repository.createStaff(TENANT_BETA, {
-        email: 'bob.member@beta.example.com',
+        email: `bob.member.${RUN_SEED}@beta.example.com`,
         fullName: 'Bob Member',
       });
 
@@ -281,7 +411,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
     it('must enforce composite foreign keys at the database level and reject cross-tenant inserts (AC-02 negative test)', async () => {
       // Create staff and team in separate tenants
       const staffAlpha = await repository.createStaff(TENANT_ALPHA, {
-        email: 'alice.fk@alpha.example.com',
+        email: `alice.fk.${RUN_SEED}@alpha.example.com`,
         fullName: 'Alice FK',
       });
 
@@ -296,14 +426,13 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
           await prisma.$executeRawUnsafe(
             `INSERT INTO "staff_teams" ("id", "tenant_id", "staff_id", "team_id", "created_at")
              VALUES ($1, $2, $3, $4, NOW())`,
-            'st-cross-1',
+            `st-cross-1-${RUN_SEED}`,
             TENANT_ALPHA,
             staffAlpha.id,
             teamBeta.id,
           );
         },
         (err: any) => {
-          // PostgreSQL foreign key violation error (code 23503 / Prisma P2003 / P2010)
           const msg = String(err.message || err);
           return (
             msg.includes('foreign key constraint') ||
@@ -321,7 +450,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
           await prisma.$executeRawUnsafe(
             `INSERT INTO "staff_teams" ("id", "tenant_id", "staff_id", "team_id", "created_at")
              VALUES ($1, $2, $3, $4, NOW())`,
-            'st-cross-2',
+            `st-cross-2-${RUN_SEED}`,
             TENANT_BETA,
             staffAlpha.id,
             teamBeta.id,

@@ -4,5 +4,5 @@ dist/
 .env
 .env.test
 .env.local
-.pgdata/
+.pgdata*/
 !prisma/migrations/**/*.sql

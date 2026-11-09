@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0011
 title: "ممیزی نهایی آمادگی دروازه صفر پس از رفع F-01 و F-03"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: chatgpt
 reviewer: antigraviti-9

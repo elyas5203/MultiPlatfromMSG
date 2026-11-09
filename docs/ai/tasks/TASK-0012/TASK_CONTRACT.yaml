@@ -1,0 +1,93 @@
+schema_version: 1
+task_id: TASK-0012
+title: "فاز ۱ الف — اسکلت محلی Core و آزمون مرز سازمانی"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-15
+reviewer: chatgpt
+
+objective: >
+  یک اسکلت محلی و حداقلی NestJS/TypeScript در apps/core بساز که بدون
+  اتصال شبکه بیرونی یا پایگاه داده، قرارداد دسترسی داده به tenant_id را
+  در یک مخزن آزمایشی درون‌حافظه‌ای اعمال و با داده ساختگی دو سازمان آزمون کند.
+business_reason: "اولین خروجی کوچک فاز ۱ پس از رأی مستقل آمادگی Gate 0، بدون وابستگی به تصمیم‌های باز نقش و ارسال."
+out_of_scope:
+  - "احراز هویت، RBAC، نقش OM، ورود OTP یا گذرواژه"
+  - "PostgreSQL، migration، schema عملیاتی، Redis، RabbitMQ، Connector یا ارسال پیام"
+  - "API عمومی، Webhook، پنل، استقرار، Secret واقعی، پایلوت یا داده مشتری"
+  - "سرور در دسترس شبکه؛ هر اجرای محلی فقط روی 127.0.0.1 باشد"
+  - "ادعای اثبات جداسازی پایگاه داده تولیدی از آزمون درون‌حافظه‌ای"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/architecture/TECH_STACK.md
+  - docs/ai/architecture/MODULE_MAP.md
+  - docs/ai/architecture/DATA_MODEL.md
+  - docs/ai/tasks/TASK-0011/GATE_ZERO_READINESS.md
+allowed_paths:
+  - "apps/core/.gitignore"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "apps/core/tsconfig.json"
+  - "apps/core/src/main.ts"
+  - "apps/core/src/app.module.ts"
+  - "apps/core/src/tenant/tenant-scope.ts"
+  - "apps/core/test/tenant-scope.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - ".env*"
+change_budget:
+  max_files_changed: 8
+  max_added_dependencies: 6
+  allowed_dependencies:
+    - "@nestjs/common"
+    - "@nestjs/core"
+    - "reflect-metadata"
+    - "rxjs"
+    - "typescript"
+    - "@types/node"
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "اسکلت NestJS/TypeScript محلی بدون مسیر ارسال و بدون endpoint عمومی ساخته و build شود."
+    verification: "npm run build با exit code صفر؛ کنترل فایل‌ها و وابستگی‌های pin شده."
+  - id: AC-02
+    statement: "عملیات خواندن رکورد در مخزن آزمایشی بدون tenant_id معتبر رد شود و رکورد سازمان دیگر را برنگرداند."
+    verification: "تست خودکار دو سازمان، شناسه نادرست و نبود tenant_id با داده ساختگی."
+  - id: AC-03
+    statement: "کد/تست هیچ نقش، تصمیم ورود، دیتابیس، Secret یا ارسال واقعی را مفروض نگیرد."
+    verification: "بازبینی Diff و جستجوی وابستگی/مسیرهای ممنوع."
+  - id: AC-04
+    statement: "محدودیت آزمون درون‌حافظه‌ای و نیاز به تست جداسازی دیتابیس در Task بعدی صریح گزارش شود."
+    verification: "گزارش تحویل و خطر باقی‌مانده."
+required_tests:
+  - "npm ci در apps/core با dependencyهای مجاز و نسخه‌های pin شده"
+  - "npm run build و npm test با exit code واقعی"
+  - "git diff --check و کنترل دقیق allowed_paths/blocked_paths"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از رأی مستقل، مدیر وضعیت فاز ۱ و گزارش‌های مأموریت را ثبت می‌کند."
+stop_conditions:
+  - "پوشه کاری واقعی مجری همان E:/projects/MultiPlatformMsg باشد یا فایل مشترک با مدیر/مجری دیگر باشد"
+  - "نیاز به فایل یا dependency خارج از فهرست مجاز"
+  - "نیاز به تغییر دیتابیس، schema، قرارداد عمومی یا تصمیم نقش/ورود"
+  - "تست اجباری اجرا نشود یا Secret/داده واقعی دیده شود"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: "مجوز صریح مالک برای شروع توسعه پس از آمادگی ثبت شده؛ این قرارداد فقط اسکلت محلی و آزمون موقت مرز سازمانی را مجاز می‌کند."

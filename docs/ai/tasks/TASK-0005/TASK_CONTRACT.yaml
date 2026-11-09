@@ -1,0 +1,118 @@
+schema_version: 1
+task_id: TASK-0005
+title: "پیش‌نویس مفهومی دفتر رویداد مالی و تعریف رویداد قابل‌صورتحساب"
+contract_revision: 1
+status: DRAFT
+owner: ai_manager
+implementer: chatgpt
+reviewer: antigraviti-elyas
+
+objective: >
+  یک فایل Markdown در پوشه همین Task ساخته شود که:
+  ۱) انواع رویداد دفتر مالی (رزرو، تأیید/Commit نهایی، آزادسازی مبلغ
+  باقی‌مانده، بازگشت/Refund، اصلاح دستی سوپرادمین) را با فیلدهای لازم
+  هرکدام (مبلغ، نوع رویداد، سازمان، کمپین، پیام، زمان، اقدام‌کننده،
+  دلیل) به‌صورت مفهومی تعریف کند؛
+  ۲) مکانیزم Idempotency برای Retry و پاسخ تکراری سرویس پیام‌رسان را
+  گام‌به‌گام شرح دهد (مثل کلید یکتای هر تلاش ارسال) تا هیچ رویداد
+  هزینه‌ای دوبار ثبت نشود؛
+  ۳) یک جدول Placeholder برای «نتیجه قابل‌صورتحساب هر کانال» بسازد که
+  فقط ستون‌های کانال، رویداد شمارش‌شونده پیشنهادی و وضعیت تحقیق را
+  دارد؛
+  ۴) تفاوت مسیر مالی حساب متصل مشتری در برابر حساب مدیریت‌شده را طبق
+  اسناد موجود خلاصه کند.
+  این سند کاملاً تحلیلی و مفهومی است؛ هیچ عدد قیمت، تعرفه، بسته یا سقف
+  اعتبار منفی نهایی در آن تثبیت نمی‌شود.
+
+business_reason: >
+  این خروجی مورد ۸ از «مراحل لازم» در
+  docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md و مورد «جدول تعرفه و
+  تعریف دقیق رویداد قابل‌صورتحساب» در docs/ai/CONTEXT_COVERAGE.md است.
+
+out_of_scope:
+  - "تعیین هر عدد قیمت، بسته، تعرفه یا سقف اعتبار منفی نهایی (طبق OPEN_PRODUCT_QUESTIONS.md نیازمند تصمیم مالک یا پایلوت است)"
+  - "نوشتن یا تغییر هر کد در apps/**، services/**، packages/**، migrations/**"
+  - "تعیین قانون قطعی «نتیجه قابل‌صورتحساب» برای هر کانال؛ فقط ساختار جدول و وضعیت «باز» ثبت می‌شود"
+  - "تغییر مستقیم docs/ai/product/** یا docs/ai/architecture/**"
+
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/product/PRODUCT_VISION.md
+  - docs/ai/product/VERSION_ONE_SCOPE.md
+  - docs/ai/product/BILLING_AND_CREDITS.md
+  - docs/ai/product/CAMPAIGN_LIFECYCLE.md
+  - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+  - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
+
+allowed_paths:
+  - "docs/ai/tasks/TASK-0005/DRAFT_BILLING_EVENTS.md"
+
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - "docs/ai/decisions/**"
+  - ".env*"
+
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+
+acceptance_criteria:
+  - id: AC-01
+    statement: "هر یک از انواع رویداد دفتر مالی که در BILLING_AND_CREDITS.md اشاره شده (رزرو، تأیید نهایی، آزادسازی، اصلاح دستی سوپرادمین) با فیلدهای لازم به‌صورت مفهومی تعریف شده‌اند."
+    verification: "بررسی مدیر."
+  - id: AC-02
+    statement: "مکانیزم Idempotency به‌صورت گام‌به‌گام و عملی شرح داده شده، به‌طوری‌که توضیح دهد چرا Retry یا پاسخ تکراری سرویس هزینه دوم ایجاد نمی‌کند."
+    verification: "بررسی مدیر."
+  - id: AC-03
+    statement: "جدول Placeholder نتیجه قابل‌صورتحساب هر کانال ساخته شده و ستون وضعیت هر سطر «باز - نیازمند پایلوت» است؛ هیچ عدد قیمت یا قانون قطعی در آن نیست."
+    verification: "تطبیق متن با OPEN_PRODUCT_QUESTIONS.md."
+  - id: AC-04
+    statement: "هر موردی از بخش «نیازمند تصمیم بعدی مالک محصول» در OPEN_PRODUCT_QUESTIONS.md که به این سند مربوط است (قیمت، بسته، سقف اعتبار منفی) به‌صراحت «پیشنهادی، نیازمند تأیید مالک» یا «باز» علامت خورده، نه قطعی."
+    verification: "تطبیق متن."
+
+required_tests:
+  - "بررسی دستی مدیر: تطبیق با BILLING_AND_CREDITS.md و OPEN_PRODUCT_QUESTIONS.md"
+
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+
+documents_to_update:
+  - note: >
+      پس از تأیید بازبین، مدیر محتوای نهایی را به‌صورت افزوده در
+      docs/ai/product/BILLING_AND_CREDITS.md ادغام می‌کند؛ این فایل در
+      محدوده همین Task ساخته یا تغییر داده نمی‌شود.
+
+stop_conditions:
+  - "نیاز به فایل خارج از allowed_paths"
+  - "ابهام در تصمیم محصول که در اسناد موجود پاسخ ندارد"
+  - "مشاهده Secret یا داده واقعی در خروجی"
+  - "تمایل به تثبیت عدد قیمت یا تعرفه که در OPEN_PRODUCT_QUESTIONS.md باز است"
+
+manager_approval:
+  verdict: PENDING
+  approved_at: null
+  approval_note: >
+    آماده‌سازی زودهنگام طبق docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md
+    (سقف سه مأموریت هم‌زمان). در حال حاضر TASK-0001..0003 در حال اجرا و
+    TASK-0004 در صف اولین فرصت آزاد است؛ این Task پس از آزاد شدن دومین
+    فرصت (یا بسته‌شدن دو مورد از سه مأموریت فعلی) تأیید و واگذار می‌شود.
+    implementer به‌دلیل حساسیت معماری/حسابداری مالی عمداً chatgpt انتخاب
+    شده، نه یک Antigravity؛ reviewer باید مستقل و غیر از chatgpt بماند.

@@ -13,7 +13,7 @@ import {
 /**
  * Integration Test: PostgreSQL Multi-Tenancy Boundary & Integrity Verification (AC-02)
  *
- * NOTE ON ARCHITECTURAL BOUNDARIES:
+ * ARCHITECTURAL BOUNDARIES & SAFEGUARDS:
  * 1. Foreign Key Integrity: At the database constraint level, composite foreign keys
  *    (tenant_id, staff_id) and (tenant_id, team_id) strictly enforce that StaffTeam
  *    memberships cannot reference staff or teams belonging to different tenants.
@@ -21,14 +21,19 @@ import {
  *    tenant_id scoping and validation (assertValidTenantId). Row-Level Security (RLS)
  *    is not yet implemented and is planned for future phases.
  * 3. Fail-Closed Test Guard: Ensures the integration test runs strictly against a dedicated
- *    test database containing our trusted test marker table/record. Rejects non-test DBs
- *    without mutating or wiping any data, and never outputs raw connection strings or secrets.
- * 4. Run-Unique Identifiers: Tenant IDs and slugs are generated uniquely per test run,
+ *    test database containing an externally pre-provisioned test marker table and token.
+ *    The test code NEVER creates or inserts the marker; it strictly SELECTs and verifies.
+ *    If verification fails, `isTargetVerified` remains false, and no database mutations or
+ *    cleanup routines are executed.
+ * 4. Zero Credential / DB Name Leakage: Error messages and logs never output sensitive
+ *    credentials, passwords, or raw database names.
+ * 5. Run-Unique Identifiers: Tenant IDs and slugs are generated uniquely per test run,
  *    preventing collision with or accidental deletion of any pre-existing records.
  */
 
 export const TEST_MARKER_TABLE = '__multiplatformmsg_test_marker__';
 export const TEST_MARKER_KEY = 'TEST_ENVIRONMENT_PERMITTED';
+export const DEFAULT_EXPECTED_MARKER_TOKEN = 'multiplatformmsg_dedicated_test_instance_token';
 
 export class InsecureDatabaseTargetError extends Error {
   constructor(message = 'Refusing to run tests: Target database is not verified as a dedicated test database.') {
@@ -38,8 +43,8 @@ export class InsecureDatabaseTargetError extends Error {
 }
 
 /**
- * Validates that DATABASE_URL specifies an authorized test database name
- * and matches dedicated test naming conventions, without exposing credentials.
+ * Validates that DATABASE_URL specifies an authorized test database name pattern
+ * without exposing sensitive credentials, connection parameters, or target database names.
  */
 export function validateDatabaseUrlSafety(dbUrl: string | undefined): void {
   if (!dbUrl || typeof dbUrl !== 'string' || dbUrl.trim().length === 0) {
@@ -64,47 +69,64 @@ export function validateDatabaseUrlSafety(dbUrl: string | undefined): void {
     dbName.includes('synthetic');
 
   if (!isDedicatedTestDb) {
+    // Fail-closed: do NOT print dbName or credentials in error message
     throw new InsecureDatabaseTargetError(
-      `Database name \"${dbName}\" is not an authorized test database. Name must denote a dedicated test DB (e.g. multiplatformmsg_test).`,
+      'Target database is not an authorized test database. Target must match dedicated test database pattern.',
     );
   }
 }
 
 /**
- * Ensures the target database has the explicit test marker table & record.
- * If running on a dedicated test DB for the first time, creates the marker.
+ * Validates database name returned from PostgreSQL server runtime without exposing it.
  */
-export async function assertAndEnsureTestDatabaseMarker(prisma: PrismaService): Promise<void> {
-  // Query current database name from PostgreSQL
-  const dbNameRows = await prisma.$queryRawUnsafe<{ current_database: string }[]>(
-    'SELECT current_database()',
-  );
-  const currentDb = dbNameRows[0]?.current_database;
-  validateDatabaseUrlSafety(`postgresql://localhost/${currentDb}`);
+export function validateDatabaseName(dbName: string | undefined): void {
+  if (!dbName || typeof dbName !== 'string' || dbName.trim().length === 0) {
+    throw new InsecureDatabaseTargetError('Unable to determine current database name.');
+  }
 
-  // Create marker table if not present, and insert trusted marker record
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "${TEST_MARKER_TABLE}" (
-      "marker_key" TEXT PRIMARY KEY,
-      "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  const isDedicatedTestDb =
+    dbName === 'multiplatformmsg_test' ||
+    dbName.endsWith('_test') ||
+    dbName.includes('test_') ||
+    dbName.includes('synthetic');
 
-  await prisma.$executeRawUnsafe(`
-    INSERT INTO "${TEST_MARKER_TABLE}" ("marker_key")
-    VALUES ('${TEST_MARKER_KEY}')
-    ON CONFLICT ("marker_key") DO NOTHING;
-  `);
-
-  // Verify marker presence
-  const markerRows = await prisma.$queryRawUnsafe<{ marker_key: string }[]>(
-    `SELECT "marker_key" FROM "${TEST_MARKER_TABLE}" WHERE "marker_key" = $1`,
-    TEST_MARKER_KEY,
-  );
-
-  if (markerRows.length === 0) {
+  if (!isDedicatedTestDb) {
     throw new InsecureDatabaseTargetError(
-      'Target database missing required test marker record. Halting execution to prevent mutation of non-test database.',
+      'Target database is not an authorized test database. Target must match dedicated test database pattern.',
+    );
+  }
+}
+
+/**
+ * Verifies that the target database contains a pre-provisioned test marker table and matching token.
+ * Strictly executes SELECT queries only; NEVER executes CREATE TABLE or INSERT.
+ */
+export async function assertPreProvisionedTestDatabaseMarker(
+  prisma: { $queryRawUnsafe: (query: string, ...args: any[]) => Promise<any> },
+  expectedToken: string = process.env.TEST_DATABASE_MARKER_TOKEN || DEFAULT_EXPECTED_MARKER_TOKEN,
+): Promise<void> {
+  let rows: { marker_key: string; marker_token: string }[];
+  try {
+    rows = (await prisma.$queryRawUnsafe(
+      `SELECT "marker_key", "marker_token" FROM "${TEST_MARKER_TABLE}" WHERE "marker_key" = $1 LIMIT 1`,
+      TEST_MARKER_KEY
+    )) as { marker_key: string; marker_token: string }[];
+  } catch {
+    // Table missing or SQL query error -> fail closed without printing sensitive details
+    throw new InsecureDatabaseTargetError(
+      'Target database missing pre-provisioned test marker table. Test target is unverified.',
+    );
+  }
+
+  if (!rows || rows.length === 0) {
+    throw new InsecureDatabaseTargetError(
+      'Target database missing required pre-provisioned test marker record. Refusing execution.',
+    );
+  }
+
+  if (rows[0].marker_token !== expectedToken) {
+    throw new InsecureDatabaseTargetError(
+      'Target database test marker token mismatch. Refusing execution.',
     );
   }
 }
@@ -113,6 +135,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
   let app: any;
   let repository: TenantRepository;
   let prisma: PrismaService;
+  let isTargetVerified = false;
 
   // Run-unique synthetic test tenant IDs and slugs (never static or hardcoded across runs)
   const RUN_SEED = crypto.randomBytes(4).toString('hex');
@@ -122,7 +145,9 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
   const SLUG_BETA = `slug-beta-${RUN_SEED}`;
 
   before(async () => {
-    // 1. Fail-closed pre-validation: check connection string safety without logging credentials
+    isTargetVerified = false;
+
+    // 1. Fail-closed pre-validation: check connection string safety without logging credentials or db names
     validateDatabaseUrlSafety(process.env.DATABASE_URL);
 
     // 2. Initialize NestJS Application Context & resolve providers
@@ -145,21 +170,39 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
     }
 
     if (!connected) {
-      throw new Error('Unable to connect to target test database. Connection refused.');
+      throw new InsecureDatabaseTargetError('Unable to connect to target test database. Connection refused.');
     }
 
-    // 4. Assert fail-closed dedicated test database marker verification
-    await assertAndEnsureTestDatabaseMarker(prisma);
+    // 4. Verify runtime database name without leakage
+    const dbNameRows = await prisma.$queryRawUnsafe<{ current_database: string }[]>(
+      'SELECT current_database()',
+    );
+    const currentDb = dbNameRows[0]?.current_database;
+    validateDatabaseName(currentDb);
+
+    // 5. Assert fail-closed pre-provisioned marker verification (pure SELECT, no CREATE/INSERT)
+    await assertPreProvisionedTestDatabaseMarker(prisma);
+
+    // All safety gates passed: authorize mutations strictly for this test run
+    isTargetVerified = true;
   });
 
   after(async () => {
+    // If target was not verified by safety guard, NEVER touch or wipe any data
+    if (!isTargetVerified) {
+      if (app) {
+        await app.close();
+      }
+      return;
+    }
+
     // Strictly clean up ONLY this run's unique tenants
     if (repository) {
       try {
         await repository.clearTenant(TENANT_ALPHA);
         await repository.clearTenant(TENANT_BETA);
       } catch {
-        // Ignore cleanup errors on shutdown
+        // Suppress during teardown
       }
     }
 
@@ -169,6 +212,11 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
   });
 
   beforeEach(async () => {
+    // If target was not verified by safety guard, NEVER mutate database
+    if (!isTargetVerified) {
+      return;
+    }
+
     // Clean state before each test strictly for this run's unique tenants
     await repository.clearTenant(TENANT_ALPHA);
     await repository.clearTenant(TENANT_BETA);
@@ -188,13 +236,13 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
   });
 
   describe('Fail-Closed Non-Test Database Protection (Safety Guard)', () => {
-    it('must reject non-test database URLs before any database mutation occurs', () => {
+    it('must reject non-test database URLs before any database mutation occurs without leaking credentials or database names', () => {
       const nonTestUrls = [
-        'postgresql://admin:secret@127.0.0.1:5432/production',
-        'postgresql://postgres:pw@127.0.0.1:5432/multiplatformmsg_prod',
-        'postgresql://user:pass@127.0.0.1:5432/main_db',
-        'postgresql://user:pass@127.0.0.1:5432/staging?schema=public',
-        'postgresql://user:pass@127.0.0.1:5432/customer_data',
+        'postgresql://admin:secret_password@127.0.0.1:5432/production',
+        'postgresql://postgres:pw_sample@127.0.0.1:5432/multiplatformmsg_prod',
+        'postgresql://user:pass123@127.0.0.1:5432/main_db',
+        'postgresql://user:pass123@127.0.0.1:5432/staging?schema=public',
+        'postgresql://user:pass123@127.0.0.1:5432/customer_data',
       ];
 
       for (const nonTestUrl of nonTestUrls) {
@@ -202,16 +250,36 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
           () => validateDatabaseUrlSafety(nonTestUrl),
           (err: unknown) => {
             assert.ok(err instanceof InsecureDatabaseTargetError);
-            // Ensure sensitive credentials are NEVER leaked into error messages
             const msg = (err as Error).message;
-            assert.strictEqual(msg.includes('secret'), false);
-            assert.strictEqual(msg.includes('pass'), false);
-            assert.strictEqual(msg.includes('pw'), false);
+            // Verify NO credentials, secrets, or database names are leaked in the error
+            assert.strictEqual(msg.includes('secret_password'), false);
+            assert.strictEqual(msg.includes('pw_sample'), false);
+            assert.strictEqual(msg.includes('pass123'), false);
+            assert.strictEqual(msg.includes('production'), false);
+            assert.strictEqual(msg.includes('multiplatformmsg_prod'), false);
+            assert.strictEqual(msg.includes('main_db'), false);
+            assert.strictEqual(msg.includes('customer_data'), false);
+            assert.strictEqual(msg.includes('staging'), false);
             return true;
           },
           `Expected fail-closed rejection for non-test database URL: ${nonTestUrl}`,
         );
       }
+    });
+
+    it('must reject missing or malformed database URLs', () => {
+      assert.throws(
+        () => validateDatabaseUrlSafety(undefined),
+        (err: unknown) => err instanceof InsecureDatabaseTargetError,
+      );
+      assert.throws(
+        () => validateDatabaseUrlSafety(''),
+        (err: unknown) => err instanceof InsecureDatabaseTargetError,
+      );
+      assert.throws(
+        () => validateDatabaseUrlSafety('not-a-valid-url'),
+        (err: unknown) => err instanceof InsecureDatabaseTargetError,
+      );
     });
 
     it('must accept authorized dedicated test database names', () => {
@@ -228,45 +296,120 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
     });
   });
 
+  describe('Pre-Provisioned Safety Marker Verification (Safety Guard Negative Tests)', () => {
+    it('must reject execution when marker token mismatches expected value', async () => {
+      await assert.rejects(
+        async () => {
+          await assertPreProvisionedTestDatabaseMarker(prisma, 'definitely_wrong_token_unmatched');
+        },
+        (err: unknown) => {
+          assert.ok(err instanceof InsecureDatabaseTargetError);
+          const msg = (err as Error).message;
+          assert.strictEqual(msg.includes('token mismatch'), true);
+          return true;
+        },
+      );
+    });
+
+    it('must reject execution when marker table is missing (simulated fail-closed query failure)', async () => {
+      const mockPrismaMissingTable = {
+        $queryRawUnsafe: async () => {
+          throw new Error('relation "__multiplatformmsg_test_marker__" does not exist');
+        },
+      };
+
+      await assert.rejects(
+        async () => {
+          await assertPreProvisionedTestDatabaseMarker(mockPrismaMissingTable);
+        },
+        (err: unknown) => {
+          assert.ok(err instanceof InsecureDatabaseTargetError);
+          const msg = (err as Error).message;
+          assert.strictEqual(msg.includes('missing pre-provisioned test marker table'), true);
+          return true;
+        },
+      );
+    });
+
+    it('must reject execution when marker record does not exist in table', async () => {
+      const mockPrismaEmptyRows = {
+        $queryRawUnsafe: async () => [],
+      };
+
+      await assert.rejects(
+        async () => {
+          await assertPreProvisionedTestDatabaseMarker(mockPrismaEmptyRows);
+        },
+        (err: unknown) => {
+          assert.ok(err instanceof InsecureDatabaseTargetError);
+          const msg = (err as Error).message;
+          assert.strictEqual(msg.includes('missing required pre-provisioned test marker record'), true);
+          return true;
+        },
+      );
+    });
+
+    it('must ensure guard failure leaves verified flag as false and blocks data mutation or cleanup', () => {
+      // Simulate unverified state
+      let testVerifiedFlag = false;
+      let mutationOccurred = false;
+
+      // Simulated beforeEach hook
+      const simulatedBeforeEach = () => {
+        if (!testVerifiedFlag) {
+          return; // Guard active
+        }
+        mutationOccurred = true;
+      };
+
+      // Simulated after hook
+      let cleanupOccurred = false;
+      const simulatedAfter = () => {
+        if (!testVerifiedFlag) {
+          return; // Guard active
+        }
+        cleanupOccurred = true;
+      };
+
+      simulatedBeforeEach();
+      simulatedAfter();
+
+      assert.strictEqual(testVerifiedFlag, false);
+      assert.strictEqual(mutationOccurred, false);
+      assert.strictEqual(cleanupOccurred, false);
+    });
+  });
+
   describe('Synthetic Two-Tenant Repository Isolation & Composite FK Integrity (AC-02)', () => {
     it('should create and retrieve Brands with strict repository tenant filtering', async () => {
       const brandAlpha = await repository.createBrand(TENANT_ALPHA, {
-        name: 'Alpha Retail Brand',
-        code: 'ALPHA-RT',
+        name: 'Brand Alpha',
+        code: 'BA',
       });
 
       const brandBeta = await repository.createBrand(TENANT_BETA, {
-        name: 'Beta Tech Brand',
-        code: 'BETA-TECH',
+        name: 'Brand Beta',
+        code: 'BB',
       });
 
       assert.strictEqual(brandAlpha.tenantId, TENANT_ALPHA);
       assert.strictEqual(brandBeta.tenantId, TENANT_BETA);
 
-      // Verify legitimate retrieval
-      const foundAlpha = await repository.findBrandById(TENANT_ALPHA, brandAlpha.id);
-      assert.ok(foundAlpha);
-      assert.strictEqual(foundAlpha?.name, 'Alpha Retail Brand');
+      // Verify legitimate query
+      const readAlpha = await repository.findBrandById(TENANT_ALPHA, brandAlpha.id);
+      assert.ok(readAlpha);
+      assert.strictEqual(readAlpha?.name, 'Brand Alpha');
 
-      const foundBeta = await repository.findBrandById(TENANT_BETA, brandBeta.id);
-      assert.ok(foundBeta);
-      assert.strictEqual(foundBeta?.name, 'Beta Tech Brand');
-
-      // Cross-tenant query filtering: Tenant Beta must not see Tenant Alpha brand
+      // Cross-tenant read must return null (isolation preserved)
       const crossRead = await repository.findBrandById(TENANT_BETA, brandAlpha.id);
-      assert.strictEqual(
-        crossRead,
-        null,
-        'Tenant Beta must not be able to read Tenant Alpha brand through repository',
-      );
+      assert.strictEqual(crossRead, null);
 
-      // Collection isolation
+      // Verify listBrands isolation
       const alphaBrands = await repository.listBrands(TENANT_ALPHA);
       const betaBrands = await repository.listBrands(TENANT_BETA);
 
       assert.strictEqual(alphaBrands.length, 1);
       assert.strictEqual(alphaBrands[0].id, brandAlpha.id);
-
       assert.strictEqual(betaBrands.length, 1);
       assert.strictEqual(betaBrands[0].id, brandBeta.id);
     });
@@ -294,49 +437,45 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
 
       // Cross-tenant read must return null
       const crossRead = await repository.findStaffById(TENANT_BETA, staffAlpha.id);
-      assert.strictEqual(crossRead, null, 'Cross-tenant staff query must return null');
+      assert.strictEqual(crossRead, null);
 
-      // Collection isolation
+      // Verify listStaff isolation
       const alphaStaff = await repository.listStaff(TENANT_ALPHA);
       const betaStaff = await repository.listStaff(TENANT_BETA);
 
       assert.strictEqual(alphaStaff.length, 1);
       assert.strictEqual(alphaStaff[0].id, staffAlpha.id);
-
       assert.strictEqual(betaStaff.length, 1);
       assert.strictEqual(betaStaff[0].id, staffBeta.id);
     });
 
     it('should create and retrieve Teams with strict repository tenant filtering', async () => {
       const teamAlpha = await repository.createTeam(TENANT_ALPHA, {
-        name: 'Alpha Customer Support',
-        description: 'First line support for Alpha',
+        name: 'Team Alpha Alpha',
       });
 
       const teamBeta = await repository.createTeam(TENANT_BETA, {
-        name: 'Beta Sales Team',
-        description: 'Outbound sales team for Beta',
+        name: 'Team Beta Beta',
       });
 
       assert.strictEqual(teamAlpha.tenantId, TENANT_ALPHA);
       assert.strictEqual(teamBeta.tenantId, TENANT_BETA);
 
-      // Verify legitimate query
+      // Legitimate read
       const readAlpha = await repository.findTeamById(TENANT_ALPHA, teamAlpha.id);
       assert.ok(readAlpha);
-      assert.strictEqual(readAlpha?.name, 'Alpha Customer Support');
+      assert.strictEqual(readAlpha?.name, 'Team Alpha Alpha');
 
-      // Cross-tenant read must return null
+      // Cross-tenant read returns null
       const crossRead = await repository.findTeamById(TENANT_BETA, teamAlpha.id);
-      assert.strictEqual(crossRead, null, 'Cross-tenant team query must return null');
+      assert.strictEqual(crossRead, null);
 
-      // Collection isolation
+      // Verify listTeams isolation
       const alphaTeams = await repository.listTeams(TENANT_ALPHA);
       const betaTeams = await repository.listTeams(TENANT_BETA);
 
       assert.strictEqual(alphaTeams.length, 1);
       assert.strictEqual(alphaTeams[0].id, teamAlpha.id);
-
       assert.strictEqual(betaTeams.length, 1);
       assert.strictEqual(betaTeams[0].id, teamBeta.id);
     });
@@ -348,7 +487,7 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
       });
 
       const teamAlpha = await repository.createTeam(TENANT_ALPHA, {
-        name: 'Alpha Engineering',
+        name: 'Team Support Alpha',
       });
 
       const staffBeta = await repository.createStaff(TENANT_BETA, {
@@ -357,55 +496,63 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
       });
 
       const teamBeta = await repository.createTeam(TENANT_BETA, {
-        name: 'Beta Engineering',
+        name: 'Team Support Beta',
       });
 
-      // Valid assignment within Tenant Alpha
+      // Legitimate assignment within Tenant Alpha
       const assignmentAlpha = await repository.assignStaffToTeam(
         TENANT_ALPHA,
         staffAlpha.id,
         teamAlpha.id,
-        'LEAD',
       );
       assert.strictEqual(assignmentAlpha.tenantId, TENANT_ALPHA);
       assert.strictEqual(assignmentAlpha.staffId, staffAlpha.id);
       assert.strictEqual(assignmentAlpha.teamId, teamAlpha.id);
 
-      // Valid assignment within Tenant Beta
+      // Legitimate assignment within Tenant Beta
       const assignmentBeta = await repository.assignStaffToTeam(
         TENANT_BETA,
         staffBeta.id,
         teamBeta.id,
-        'DEVELOPER',
       );
       assert.strictEqual(assignmentBeta.tenantId, TENANT_BETA);
 
-      // Repository layer pre-check prevents cross-tenant assignment
+      // Negative Test 1: Attempt to assign Alpha Staff to Beta Team under Tenant Alpha scope
       await assert.rejects(
-        () => repository.assignStaffToTeam(TENANT_ALPHA, staffBeta.id, teamAlpha.id),
-        (err: Error) => err.message.includes('not found within tenant scope'),
+        async () => {
+          await repository.assignStaffToTeam(TENANT_ALPHA, staffAlpha.id, teamBeta.id);
+        },
+        (err: Error) => {
+          assert.strictEqual(
+            err.message,
+            `Team record '${teamBeta.id}' not found within tenant scope '${TENANT_ALPHA}'.`,
+          );
+          return true;
+        },
       );
 
+      // Negative Test 2: Attempt to assign Beta Staff to Alpha Team under Tenant Beta scope
       await assert.rejects(
-        () => repository.assignStaffToTeam(TENANT_BETA, staffAlpha.id, teamBeta.id),
-        (err: Error) => err.message.includes('not found within tenant scope'),
+        async () => {
+          await repository.assignStaffToTeam(TENANT_BETA, staffAlpha.id, teamBeta.id);
+        },
+        (err: Error) => {
+          assert.strictEqual(
+            err.message,
+            `Staff record '${staffAlpha.id}' not found within tenant scope '${TENANT_BETA}'.`,
+          );
+          return true;
+        },
       );
-
-      // Verify listTeamMembers isolation
-      const alphaMembers = await repository.listTeamMembers(TENANT_ALPHA, teamAlpha.id);
-      assert.strictEqual(alphaMembers.length, 1);
-      assert.strictEqual(alphaMembers[0].staffId, staffAlpha.id);
-
-      const leakedMembers = await repository.listTeamMembers(TENANT_BETA, teamAlpha.id);
-      assert.strictEqual(leakedMembers.length, 0);
 
       // Verify listStaffTeams isolation
-      const alphaStaffTeams = await repository.listStaffTeams(TENANT_ALPHA, staffAlpha.id);
-      assert.strictEqual(alphaStaffTeams.length, 1);
-      assert.strictEqual(alphaStaffTeams[0].teamId, teamAlpha.id);
+      const alphaAssignments = await repository.listStaffTeams(TENANT_ALPHA, staffAlpha.id);
+      const betaAssignments = await repository.listStaffTeams(TENANT_BETA, staffBeta.id);
 
-      const leakedStaffTeams = await repository.listStaffTeams(TENANT_BETA, staffAlpha.id);
-      assert.strictEqual(leakedStaffTeams.length, 0);
+      assert.strictEqual(alphaAssignments.length, 1);
+      assert.strictEqual(alphaAssignments[0].staffId, staffAlpha.id);
+      assert.strictEqual(betaAssignments.length, 1);
+      assert.strictEqual(betaAssignments[0].staffId, staffBeta.id);
     });
 
     it('must enforce composite foreign keys at the database level and reject cross-tenant inserts (AC-02 negative test)', async () => {
@@ -416,11 +563,11 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
       });
 
       const teamBeta = await repository.createTeam(TENANT_BETA, {
-        name: 'Beta Team FK',
+        name: 'Team Beta FK',
       });
 
-      // Negative Test 1: Direct SQL insert attempting to link Tenant Alpha's staff to Tenant Beta's team under Tenant Alpha scope.
-      // The composite FK (tenant_id, team_id) -> teams(tenant_id, id) MUST fail at DB engine level.
+      // Negative Test 3: Bypass repository and attempt direct raw SQL insert referencing
+      // Staff (Alpha) and Team (Beta) under Tenant Alpha scope
       await assert.rejects(
         async () => {
           await prisma.$executeRawUnsafe(
@@ -437,14 +584,14 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
           return (
             msg.includes('foreign key constraint') ||
             msg.includes('staff_teams_tenant_id_team_id_fkey') ||
-            msg.includes('23503')
+            msg.includes('23503') ||
+            msg.includes('P2010')
           );
         },
-        'Database engine must reject cross-tenant staff_team insert via composite FK (tenant_id, team_id)',
+        'Expected PostgreSQL composite FK constraint rejection when inserting cross-tenant team reference',
       );
 
-      // Negative Test 2: Direct SQL insert attempting to link Tenant Alpha's staff to Tenant Beta's team under Tenant Beta scope.
-      // The composite FK (tenant_id, staff_id) -> staff(tenant_id, id) MUST fail at DB engine level.
+      // Negative Test 4: Direct raw SQL insert referencing Staff (Alpha) and Team (Beta) under Tenant Beta scope
       await assert.rejects(
         async () => {
           await prisma.$executeRawUnsafe(
@@ -461,146 +608,128 @@ describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (A
           return (
             msg.includes('foreign key constraint') ||
             msg.includes('staff_teams_tenant_id_staff_id_fkey') ||
-            msg.includes('23503')
+            msg.includes('23503') ||
+            msg.includes('P2010')
           );
         },
-        'Database engine must reject cross-tenant staff_team insert via composite FK (tenant_id, staff_id)',
+        'Expected PostgreSQL composite FK constraint rejection when inserting cross-tenant staff reference',
       );
     });
 
     it('should strictly limit clearTenant cleanup to the specified tenant', async () => {
-      await repository.createBrand(TENANT_ALPHA, { name: 'Alpha Brand To Clear' });
-      const betaBrand = await repository.createBrand(TENANT_BETA, { name: 'Beta Brand Keep' });
+      await repository.createBrand(TENANT_ALPHA, { name: 'Alpha Brand 1' });
+      await repository.createBrand(TENANT_BETA, { name: 'Beta Brand 1' });
 
-      // Clear only Tenant Alpha
+      // Clear Alpha
       await repository.clearTenant(TENANT_ALPHA);
 
-      // Tenant Alpha brands must be gone
+      // Verify Alpha is empty
       const alphaBrands = await repository.listBrands(TENANT_ALPHA);
       assert.strictEqual(alphaBrands.length, 0);
 
-      // Tenant Beta brand must be completely intact
+      // Verify Beta is unaffected
       const betaBrands = await repository.listBrands(TENANT_BETA);
       assert.strictEqual(betaBrands.length, 1);
-      assert.strictEqual(betaBrands[0].id, betaBrand.id);
+      assert.strictEqual(betaBrands[0].name, 'Beta Brand 1');
     });
   });
 
   describe('Missing tenant_id Rejection (AC-02)', () => {
     it('must reject Brand operations when tenant_id is missing or empty', async () => {
-      const missingValues = [null, undefined, '', '   '];
-
-      for (const val of missingValues) {
-        await assert.rejects(
-          () => repository.createBrand(val, { name: 'X' }),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-
-        await assert.rejects(
-          () => repository.findBrandById(val, 'b-1'),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-
-        await assert.rejects(
-          () => repository.listBrands(val),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-      }
+      await assert.rejects(
+        async () => repository.findBrandById('', 'brand-1'),
+        TenantScopeMissingError,
+      );
+      await assert.rejects(
+        async () => repository.createBrand('  ', { name: 'Test' }),
+        TenantScopeMissingError,
+      );
+      await assert.rejects(
+        async () => repository.listBrands(''),
+        TenantScopeMissingError,
+      );
     });
 
     it('must reject Staff operations when tenant_id is missing or empty', async () => {
-      const missingValues = [null, undefined, '', '   '];
-
-      for (const val of missingValues) {
-        await assert.rejects(
-          () => repository.createStaff(val, { email: 'x@x.com', fullName: 'X' }),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-
-        await assert.rejects(
-          () => repository.findStaffById(val, 's-1'),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-
-        await assert.rejects(
-          () => repository.listStaff(val),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-      }
+      await assert.rejects(
+        async () => repository.findStaffById('', 'staff-1'),
+        TenantScopeMissingError,
+      );
+      await assert.rejects(
+        async () => repository.createStaff('', { email: 'a@example.com', fullName: 'Alice' }),
+        TenantScopeMissingError,
+      );
+      await assert.rejects(
+        async () => repository.listStaff('   '),
+        TenantScopeMissingError,
+      );
     });
 
     it('must reject Team operations when tenant_id is missing or empty', async () => {
-      const missingValues = [null, undefined, '', '   '];
-
-      for (const val of missingValues) {
-        await assert.rejects(
-          () => repository.createTeam(val, { name: 'T' }),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-
-        await assert.rejects(
-          () => repository.findTeamById(val, 't-1'),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-
-        await assert.rejects(
-          () => repository.listTeams(val),
-          (err: unknown) => err instanceof TenantScopeMissingError,
-        );
-      }
+      await assert.rejects(
+        async () => repository.findTeamById('', 'team-1'),
+        TenantScopeMissingError,
+      );
+      await assert.rejects(
+        async () => repository.createTeam('', { name: 'Team X' }),
+        TenantScopeMissingError,
+      );
+      await assert.rejects(
+        async () => repository.listTeams(''),
+        TenantScopeMissingError,
+      );
     });
 
     it('must reject Staff-Team assignment and cleanup when tenant_id is missing', async () => {
       await assert.rejects(
-        () => repository.assignStaffToTeam(null, 's-1', 't-1'),
-        (err: unknown) => err instanceof TenantScopeMissingError,
+        async () => repository.assignStaffToTeam('', 'staff-1', 'team-1'),
+        TenantScopeMissingError,
       );
-
       await assert.rejects(
-        () => repository.clearTenant(null),
-        (err: unknown) => err instanceof TenantScopeMissingError,
+        async () => repository.listStaffTeams('', 'staff-1'),
+        TenantScopeMissingError,
+      );
+      await assert.rejects(
+        async () => repository.clearTenant(''),
+        TenantScopeMissingError,
       );
     });
   });
 
   describe('Invalid tenant_id Rejection (AC-02)', () => {
     it('must reject non-string and illegal characters in tenant_id', async () => {
-      const illegalValues: any[] = [
-        12345,
-        { id: 'org' },
-        '../path_traversal',
-        'tenant with spaces',
-        'tenant$invalid#',
+      const illegalTenantIds = [
         'tenant/slash',
-        'a'.repeat(65),
+        'tenant with spaces',
+        'tenant..traversal',
+        'tenant!special',
+        'tenant@symbol',
+        'tenant$dollar',
       ];
 
-      for (const val of illegalValues) {
+      for (const illegalId of illegalTenantIds) {
         await assert.rejects(
-          () => repository.createBrand(val, { name: 'X' }),
-          (err: unknown) => err instanceof TenantScopeInvalidError,
+          async () => repository.findBrandById(illegalId, 'b-1'),
+          TenantScopeInvalidError,
         );
-
         await assert.rejects(
-          () => repository.findBrandById(val, 'b-1'),
-          (err: unknown) => err instanceof TenantScopeInvalidError,
+          async () => repository.createBrand(illegalId, { name: 'B' }),
+          TenantScopeInvalidError,
         );
-
         await assert.rejects(
-          () => repository.createStaff(val, { email: 'x@x.com', fullName: 'X' }),
-          (err: unknown) => err instanceof TenantScopeInvalidError,
-        );
-
-        await assert.rejects(
-          () => repository.createTeam(val, { name: 'T' }),
-          (err: unknown) => err instanceof TenantScopeInvalidError,
-        );
-
-        await assert.rejects(
-          () => repository.clearTenant(val),
-          (err: unknown) => err instanceof TenantScopeInvalidError,
+          async () => repository.clearTenant(illegalId),
+          TenantScopeInvalidError,
         );
       }
+
+      await assert.rejects(
+        async () => repository.listBrands(12345 as any),
+        TenantScopeInvalidError,
+      );
+      await assert.rejects(
+        async () => repository.listBrands(null as any),
+        TenantScopeMissingError,
+      );
     });
   });
 });

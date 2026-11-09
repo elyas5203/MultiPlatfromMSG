@@ -1,0 +1,18 @@
+﻿version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: multiplatformmsg_test_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_sample_dev_pw
+      POSTGRES_DB: multiplatformmsg_test
+    ports:
+      - "127.0.0.1:54332:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_test_data:

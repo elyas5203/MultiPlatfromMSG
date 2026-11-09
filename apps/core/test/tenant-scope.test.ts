@@ -1,3 +1,4 @@
+process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres@127.0.0.1:54332/postgres?schema=public';
 import { describe, it, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
 import { NestFactory } from '@nestjs/core';

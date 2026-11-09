@@ -2,11 +2,14 @@ schema_version: 1
 governance_version: 2.0.0
 entry_point: docs/ai/START_HERE.md
 current_state: docs/ai/CURRENT_STATE.md
+owner_intent: docs/ai/OWNER_INTENT.md
+manager_bootstrap: docs/ai/governance/MANAGER_BOOTSTRAP.md
 sections:
   governance:
     summary: "نقش‌ها، مجوزها، نبایدها، شواهد و چرخه مأموریت"
     index: docs/ai/governance/GOVERNANCE_MANIFEST.yaml
     team_operating_model: docs/ai/governance/AI_TEAM_OPERATING_MODEL.md
+    context_coverage: docs/ai/CONTEXT_COVERAGE.md
   product:
     summary: "تعریف محصول، محدوده نسخه اول و موارد خارج از محدوده"
     index: docs/ai/product/REQUIREMENTS_INDEX.md

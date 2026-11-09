@@ -14,15 +14,18 @@ last_verified_commit: pending-first-commit
 
 1. نقش خود را از مأموریت جاری مشخص کن: `manager`، `coder` یا `reviewer`.
 2. `docs/ai/CURRENT_STATE.md` را بخوان.
-3. قوانین نقش خود را از `docs/ai/governance/` بخوان.
-4. فقط `TASK_CONTRACT.yaml` مأموریت فعال و فایل‌های `must_read` آن را بخوان.
-5. اگر مأموریت وضعیت `APPROVED` ندارد، هیچ فایلی را تغییر نده.
-6. اگر پاسخ یک تصمیم تجاری در اسناد موجود نیست، آن را حدس نزن.
+3. اگر مدیر تیم هستی، `docs/ai/OWNER_INTENT.md` و `docs/ai/governance/MANAGER_BOOTSTRAP.md` را بخوان.
+4. قوانین نقش خود را از `docs/ai/governance/` بخوان.
+5. فقط `TASK_CONTRACT.yaml` مأموریت فعال و فایل‌های `must_read` آن را بخوان.
+6. اگر مأموریت وضعیت `APPROVED_FOR_IMPLEMENTATION` ندارد، هیچ فایلی را تغییر نده.
+7. اگر پاسخ یک تصمیم تجاری در اسناد موجود نیست، آن را حدس نزن.
 
 ## مسیرهای اصلی
 
 - نقشه اسناد: `docs/ai/DOCUMENT_MAP.yaml`
 - وضعیت جاری: `docs/ai/CURRENT_STATE.md`
+- نیت و خواسته‌های مالک: `docs/ai/OWNER_INTENT.md`
+- راه‌اندازی مدیر اصلی: `docs/ai/governance/MANAGER_BOOTSTRAP.md`
 - قوانین مدیر: `docs/ai/governance/MANAGER_PROTOCOL.md`
 - قوانین کدنویس: `docs/ai/governance/CODER_PROTOCOL.md`
 - قوانین بازبین: `docs/ai/governance/REVIEWER_PROTOCOL.md`

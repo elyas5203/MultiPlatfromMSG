@@ -1,0 +1,103 @@
+schema_version: 1
+task_id: TASK-0003
+title: "پیش‌نویس ماتریس نقش‌ها و دسترسی‌های انسانی"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-9
+reviewer: chatgpt
+
+objective: >
+  یک فایل Markdown در پوشه همین Task ساخته شود که نقش‌های انسانی محصول
+  (سوپرادمین خدمتگزاران تک، مدیر سازمان مشتری، کارمند/عضو تیم مشتری، و
+  هر نقش دیگر که از اسناد موجود استخراج می‌شود) را فهرست کند و برای هر
+  نقش، در قالب جدول، دسترسی به حداقل این بخش‌ها را مشخص کند: مخاطبان،
+  کمپین، Inbox/پاسخ‌گویی، تنظیمات حساب فرستنده، مالی/اعتبار، تنظیمات
+  سازمان، و دید بین‌سازمانی/بین‌برندی.
+
+business_reason: >
+  این خروجی مورد ۴ از «مراحل لازم» در
+  docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md و مورد «ماتریس دقیق
+  نقش‌ها و مجوزهای انسانی» در docs/ai/CONTEXT_COVERAGE.md است.
+
+out_of_scope:
+  - "نوشتن یا تغییر هر کد در apps/**، services/**، packages/**"
+  - "تصمیم‌گیری نهایی درباره نام‌گذاری نقش یا سطح دسترسی که مالک هنوز تعیین نکرده؛ این موارد باید «پیشنهادی، نیازمند تأیید مالک» علامت بخورند"
+  - "تغییر مستقیم docs/ai/product/** یا docs/ai/architecture/**"
+
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/product/TENANCY_AND_ACCESS.md
+  - docs/ai/product/TEAM_INBOX.md
+  - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+  - docs/ai/product/BILLING_AND_CREDITS.md
+  - docs/ai/OWNER_INTENT.md
+
+allowed_paths:
+  - "docs/ai/tasks/TASK-0003/DRAFT_ROLES_MATRIX.md"
+
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - "docs/ai/decisions/**"
+  - ".env*"
+
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+
+acceptance_criteria:
+  - id: AC-01
+    statement: "همه نقش‌های قابل‌استخراج از اسناد موجود فهرست شده‌اند و هیچ نقش اختراعی بدون ریشه در اسناد اضافه نشده."
+    verification: "بررسی مدیر روی تطبیق هر نقش با منبع سند."
+  - id: AC-02
+    statement: "جدول دسترسی برای هر نقش و هر بخش یکی از مقادیر روشن (کامل/محدود/فقط‌مشاهده/ندارد) دارد، نه توضیح مبهم."
+    verification: "بررسی مدیر."
+  - id: AC-03
+    statement: "قاعده عدم دید بین‌سازمانی/بین‌برندی به‌صراحت برای نقش‌های غیر سوپرادمین نوشته شده و با ABSOLUTE_PROHIBITIONS.md (بخش داده و سازمان‌ها) ناسازگار نیست."
+    verification: "تطبیق متن."
+  - id: AC-04
+    statement: "هر نقطه‌ای که مالک هنوز تصمیم نگرفته، با برچسب «پیشنهادی، نیازمند تأیید مالک» مشخص شده."
+    verification: "بررسی مدیر."
+
+required_tests:
+  - "بررسی دستی مدیر: تطبیق جدول با ABSOLUTE_PROHIBITIONS.md و TENANCY_AND_ACCESS.md"
+
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+
+documents_to_update:
+  - note: >
+      پس از تأیید بازبین، مدیر محتوای نهایی را به یک سند جدید در
+      docs/ai/product/ROLES_AND_PERMISSIONS.md منتقل می‌کند؛ این فایل در
+      محدوده همین Task ساخته یا تغییر داده نمی‌شود.
+
+stop_conditions:
+  - "نیاز به فایل خارج از allowed_paths"
+  - "ابهام در تصمیم محصول که در اسناد موجود پاسخ ندارد"
+  - "مشاهده Secret یا داده واقعی در خروجی"
+  - "تناقض میان اسناد must_read که خودش نتواند حل کند"
+
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: >
+    طبق تأیید مالک برای اجرای docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md؛
+    مأموریت مستندسازی روشن و محدود، با حساسیت امنیتی/دسترسی، بازبینی Codex/ChatGPT الزامی.

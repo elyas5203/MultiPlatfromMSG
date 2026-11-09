@@ -1,0 +1,103 @@
+schema_version: 1
+task_id: TASK-0002
+title: "پیش‌نویس مدل مفهومی داده و جداسازی سازمان، برند، تیم و منابع مشترک"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-elyas
+reviewer: chatgpt
+
+objective: >
+  یک فایل Markdown در پوشه همین Task ساخته شود که موجودیت‌های مفهومی اصلی
+  داده (سازمان/Tenant، برند، تیم/کارمند، مخاطب، کمپین، پیام، حساب فرستنده،
+  گفتگوی Inbox، رویداد مالی) و رابطه آن‌ها را در حد نمودار یا فهرست مفهومی
+  (بدون DDL واقعی) نشان دهد، و قاعده دقیق جداسازی داده میان سازمان‌ها و
+  برندها و نحوه اشتراک منابع مشترک (مثل حساب مدیریت‌شده مشترک میان چند
+  مشتری) را به‌زبان ساده توضیح دهد.
+
+business_reason: >
+  این خروجی مورد ۳ از «مراحل لازم» در
+  docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md و مورد «مدل کامل داده و
+  جداسازی سازمان‌ها» در docs/ai/CONTEXT_COVERAGE.md است.
+
+out_of_scope:
+  - "نوشتن Migration، Schema واقعی یا هر کد در apps/**، services/**، packages/**، migrations/**"
+  - "تصمیم نهایی درباره مدت نگهداری داده یا جزئیات اشتراک منابع که در OPEN_PRODUCT_QUESTIONS.md باز است؛ این موارد باید فقط به‌عنوان «باز» علامت بخورند"
+  - "تغییر مستقیم docs/ai/architecture/** یا docs/ai/product/**"
+
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/architecture/SYSTEM_CONTEXT.md
+  - docs/ai/product/TENANCY_AND_ACCESS.md
+  - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+  - docs/ai/product/BILLING_AND_CREDITS.md
+  - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
+
+allowed_paths:
+  - "docs/ai/tasks/TASK-0002/DRAFT_DATA_MODEL.md"
+
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - "docs/ai/decisions/**"
+  - ".env*"
+
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+
+acceptance_criteria:
+  - id: AC-01
+    statement: "موجودیت‌های اصلی فهرست‌شده در objective حاضرند و برای هرکدام مالک داده (کدام ماژول) مشخص شده."
+    verification: "بررسی مدیر."
+  - id: AC-02
+    statement: "قاعده جداسازی tenant_id/سازمان به‌صراحت برای حداقل سه موجودیت حساس (مخاطب، پیام، رویداد مالی) نوشته شده."
+    verification: "بررسی مدیر روی تطبیق با TENANCY_AND_ACCESS.md."
+  - id: AC-03
+    statement: "نحوه اشتراک حساب مدیریت‌شده میان چند مشتری بدون نشت داده گفتگو توضیح داده شده و با SENDER_ACCOUNTS_AND_ROUTING.md ناسازگار نیست."
+    verification: "بررسی مدیر."
+  - id: AC-04
+    statement: "هرجا پاسخ در OPEN_PRODUCT_QUESTIONS.md «باز» بود، سند آن را به‌صراحت «باز» نوشته، نه حدسی."
+    verification: "تطبیق متن."
+
+required_tests:
+  - "بررسی دستی مدیر: تطبیق با TENANCY_AND_ACCESS.md و ABSOLUTE_PROHIBITIONS.md (بخش داده و سازمان‌ها)"
+
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+
+documents_to_update:
+  - note: >
+      پس از تأیید بازبین، مدیر محتوای نهایی را به یک سند جدید در
+      docs/ai/architecture/DATA_MODEL.md منتقل می‌کند؛ این فایل در محدوده
+      همین Task ساخته یا تغییر داده نمی‌شود.
+
+stop_conditions:
+  - "نیاز به فایل خارج از allowed_paths"
+  - "ابهام در تصمیم محصول که در OPEN_PRODUCT_QUESTIONS.md پاسخ ندارد"
+  - "مشاهده Secret یا داده واقعی در خروجی"
+  - "تناقض بین TENANCY_AND_ACCESS.md و SENDER_ACCOUNTS_AND_ROUTING.md که خودش نتواند حل کند"
+
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: >
+    طبق تأیید مالک برای اجرای docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md؛
+    مأموریت مستندسازی روشن و محدود، مناسب Antigravity، با بازبینی Codex/ChatGPT.

@@ -1,0 +1,105 @@
+schema_version: 1
+task_id: TASK-0001
+title: "پیش‌نویس نقشه ماژول‌های محصول و قواعد ارتباط میان آن‌ها"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-14
+reviewer: chatgpt
+
+objective: >
+  یک فایل Markdown در پوشه همین Task ساخته شود که ماژول‌های اصلی محصول
+  (مثلاً سازمان/تنانسی، مخاطبان، کمپین، Inbox، Connectorها، مالی/اعتبار،
+  API/Webhook، عملیات/مانیتورینگ) را نام می‌برد، مرز مسئولیت هر ماژول را
+  به‌زبان ساده فارسی مشخص می‌کند، و قواعد جلوگیری از تغییر زنجیره‌ای
+  (یک ماژول چه چیزی را نباید مستقیم از ماژول دیگر بخواند یا تغییر دهد) را
+  فهرست می‌کند. این سند فقط تحلیلی است؛ هیچ کد یا Schema ساخته نمی‌شود.
+
+business_reason: >
+  این خروجی مورد ۱ و ۲ از «مراحل لازم» در
+  docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md و همچنین مورد «معماری ریز
+  ماژول‌ها و قرارداد ارتباطی آن‌ها» در docs/ai/CONTEXT_COVERAGE.md است که
+  هنوز به سند تبدیل نشده.
+
+out_of_scope:
+  - "نوشتن یا تغییر هر کد در apps/** ،services/** ،packages/**"
+  - "تغییر مستقیم docs/ai/architecture/** یا docs/ai/product/** توسط کدنویس"
+  - "تصمیم‌گیری درباره نام‌گذاری نهایی جداول یا Schema دیتابیس"
+  - "هر ادعا درباره مواردی که در docs/ai/product/OPEN_PRODUCT_QUESTIONS.md «باز» علامت خورده‌اند"
+
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/architecture/SYSTEM_CONTEXT.md
+  - docs/ai/architecture/TECH_STACK.md
+  - docs/ai/product/VERSION_ONE_SCOPE.md
+  - docs/ai/product/REQUIREMENTS_INDEX.md
+  - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
+
+allowed_paths:
+  - "docs/ai/tasks/TASK-0001/DRAFT_MODULE_MAP.md"
+
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - "docs/ai/decisions/**"
+  - ".env*"
+
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+
+acceptance_criteria:
+  - id: AC-01
+    statement: "همه ماژول‌های سطح بالای محصول نسخه اول (طبق VERSION_ONE_SCOPE.md) فهرست و مرز مسئولیت هرکدام در یک یا دو جمله ساده فارسی توضیح داده شده."
+    verification: "بررسی مدیر: هر ماژول VERSION_ONE_SCOPE.md یک متناظر در سند دارد."
+  - id: AC-02
+    statement: "برای هر جفت ماژول مرتبط، نوع ارتباط (کدام ماژول صاحب داده است، کدام فقط می‌خواند) مشخص شده."
+    verification: "بررسی مدیر روی جدول یا فهرست ارتباطات."
+  - id: AC-03
+    statement: "حداقل سه قاعده صریح برای جلوگیری از تغییر زنجیره‌ای نوشته شده (مثلاً Connector نباید مستقیم Ledger مالی را تغییر دهد)."
+    verification: "شمارش قواعد در سند."
+  - id: AC-04
+    statement: "هیچ تصمیم تجاری یا عدد حدسی که در OPEN_PRODUCT_QUESTIONS.md باز است، به‌عنوان قطعی ادعا نشده."
+    verification: "تطبیق متن سند با OPEN_PRODUCT_QUESTIONS.md."
+
+required_tests:
+  - "بررسی دستی مدیر: تطبیق فهرست ماژول‌ها با VERSION_ONE_SCOPE.md (بدون کد، بدون اجرای تست خودکار)"
+
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+
+documents_to_update:
+  - note: >
+      پس از تأیید بازبین، مدیر (نه کدنویس) محتوای نهایی را به
+      docs/ai/architecture/MODULE_MAP.md منتقل می‌کند؛ این فایل در محدوده
+      همین Task ساخته یا تغییر داده نمی‌شود.
+
+stop_conditions:
+  - "نیاز به فایل خارج از allowed_paths"
+  - "ابهام در تصمیم محصول که در OPEN_PRODUCT_QUESTIONS.md پاسخ ندارد"
+  - "مشاهده Secret یا داده واقعی در خروجی"
+  - "تناقض بین VERSION_ONE_SCOPE.md و SYSTEM_CONTEXT.md که خودش نتواند حل کند"
+
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: >
+    طبق تأیید مالک برای اجرای docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md؛
+    مأموریت مستندسازی روشن و محدود، مناسب Antigravity، با بازبینی Codex/ChatGPT.

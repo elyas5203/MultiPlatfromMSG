@@ -1,0 +1,33 @@
+schema_version: 1
+governance_version: 2.0.0
+entry_point: docs/ai/START_HERE.md
+current_state: docs/ai/CURRENT_STATE.md
+sections:
+  governance:
+    summary: "نقش‌ها، مجوزها، نبایدها، شواهد و چرخه مأموریت"
+    index: docs/ai/governance/GOVERNANCE_MANIFEST.yaml
+  product:
+    summary: "تعریف محصول، محدوده نسخه اول و موارد خارج از محدوده"
+    index: docs/ai/product/REQUIREMENTS_INDEX.md
+    documents:
+      - docs/ai/product/PRODUCT_VISION.md
+      - docs/ai/product/VERSION_ONE_SCOPE.md
+      - docs/ai/product/NON_GOALS.md
+  architecture:
+    summary: "زمینه سیستم، فناوری و مرزهای فنی"
+    documents:
+      - docs/ai/architecture/SYSTEM_CONTEXT.md
+      - docs/ai/architecture/TECH_STACK.md
+  decisions:
+    summary: "تصمیم‌های قطعی مستقل و قابل جایگزینی"
+    directory: docs/ai/decisions
+  tasks:
+    summary: "قرارداد و شواهد هر مأموریت"
+    directory: docs/ai/tasks
+    lifecycle: docs/ai/governance/TASK_LIFECYCLE.md
+    templates:
+      - docs/ai/templates/TASK_CONTRACT.template.yaml
+      - docs/ai/templates/IMPLEMENTATION_REPORT.template.md
+      - docs/ai/templates/REVIEW_REPORT.template.md
+      - docs/ai/templates/DECISION_RECORD.template.md
+

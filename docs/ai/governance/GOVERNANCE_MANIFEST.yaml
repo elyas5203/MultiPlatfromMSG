@@ -1,0 +1,45 @@
+governance_id: UMAC-P-V2
+version: 2.0.0
+status: active
+supersedes: E:/projects/MultiPlatformMsg/UNIVERSAL_AI_MASTER_PROTOCOL.md
+principles:
+  - small_context
+  - strict_scope
+  - independent_evidence
+  - explicit_human_authority
+roles:
+  manager:
+    protocol: docs/ai/governance/MANAGER_PROTOCOL.md
+    may_write:
+      - docs/ai/**
+    may_not_write:
+      - apps/**
+      - services/**
+      - packages/**
+      - migrations/**
+      - infrastructure/**
+  coder:
+    protocol: docs/ai/governance/CODER_PROTOCOL.md
+    permissions_source: docs/ai/tasks/TASK-XXXX/TASK_CONTRACT.yaml
+    may_not_write:
+      - docs/ai/product/**
+      - docs/ai/architecture/**
+      - docs/ai/governance/**
+      - docs/ai/decisions/**
+  reviewer:
+    protocol: docs/ai/governance/REVIEWER_PROTOCOL.md
+    may_write:
+      - docs/ai/reports/TASK-XXXX/REVIEW_FINDINGS.md
+global_prohibitions: docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+required_result_states:
+  - PASS
+  - FAIL
+  - BLOCKED
+source_of_truth_priority:
+  - owner_approved_decision
+  - active_decision_document
+  - domain_document
+  - approved_task_contract
+  - implementation
+  - chat_memory
+

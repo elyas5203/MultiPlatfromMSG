@@ -1,0 +1,55 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.session
+*credentials*
+*secret*
+
+# Telegram and channel sessions
+session.madeline/
+*.madeline
+MadelineProto.log
+
+# Private customer and production data
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.xlsx
+*.xls
+*.csv
+*.log
+logs/
+uploads/
+backups/
+
+# Dependencies and generated output
+node_modules/
+vendor/
+dist/
+build/
+coverage/
+.next/
+.turbo/
+tmp/
+temp/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# AI tool local state; shared rules remain tracked elsewhere
+.claude/settings.local.json
+.codex/
+.antigravity/
+.openmausbot/
+

@@ -1,0 +1,74 @@
+schema_version: 1
+task_id: TASK-0009
+title: "رفع ناسازگاری تحلیلی مالکیت موجودیت پیام"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: chatgpt
+reviewer: antigraviti-9
+
+objective: >
+  فقط یک گزارش معماری بساز که مالکیت شناسه، وضعیت و چرخه پیام خروجی و ورودی را
+  میان ماژول‌های مصوب روشن کند، اختلاف MODULE_MAP و DATA_MODEL را با شاهد دقیق
+  توضیح دهد و اصلاح حداقلی سازگار با مرزهای موجود پیشنهاد کند.
+business_reason: "یافته F-01 ممیزی TASK-0008 مانع آغاز طراحی پیاده‌سازی پیام است."
+out_of_scope:
+  - "کدنویسی، schema فیزیکی، migration، پایلوت، ارسال واقعی"
+  - "اصلاح مستقیم اسناد مادر یا افزودن قطعی ماژول تازه بدون بازبینی مدیر"
+  - "تصمیم مالی یا تجاری تازه"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/tasks/TASK-0008/CONSISTENCY_AUDIT.md
+  - docs/ai/architecture/MODULE_MAP.md
+  - docs/ai/architecture/DATA_MODEL.md
+  - docs/ai/product/DEVELOPMENT_PHASES.md
+allowed_paths:
+  - "docs/ai/tasks/TASK-0009/DRAFT_MESSAGE_OWNERSHIP.md"
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - ".env*"
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "مالک واحد Message و شناسه/وضعیت خروجی و ورودی با نام ماژول موجود یا پیشنهاد صریح ماژول تازه مشخص شود."
+    verification: "تطبیق نام و مرزها با فهرست ۹ ماژول MODULE_MAP و موجودیت‌های DATA_MODEL."
+  - id: AC-02
+    statement: "مسیر کمپین تا صف و نتیجه کانکتور و مسیر پاسخ تا Inbox، بدون دسترسی مستقیم کانکتور به داده اصلی، روشن باشد."
+    verification: "بازبینی دستی هر مسیر و مالک تغییر وضعیت/یدکتایی."
+  - id: AC-03
+    statement: "تغییر حداقلی لازم برای همسوسازی دو سند مادر، همراه با خطرها و پرسش‌های باز، پیشنهاد شود."
+    verification: "Diff پیشنهادی در گزارش و بازبینی مستقل؛ اسناد مادر در این Task تغییر نکنند."
+required_tests:
+  - "بازبینی دستی تطبیقی اسناد must_read و git diff --check و scope check"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از رأی مستقل، مدیر MODULE_MAP.md و DATA_MODEL.md را با تصمیم معماری مستند هماهنگ می‌کند."
+stop_conditions:
+  - "نیاز به تغییر خارج از allowed_paths"
+  - "ابهام محصولی که فقط مالک می‌تواند حل کند؛ در گزارش علامت بزن و بخش مستقل را ادامه بده"
+  - "مشاهده Secret یا داده واقعی"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: "مأموریت محدود رفع F-01، بدون کد یا تغییر سند مادر."

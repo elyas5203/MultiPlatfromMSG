@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0001
 title: "پیش‌نویس نقشه ماژول‌های محصول و قواعد ارتباط میان آن‌ها"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-14
 reviewer: chatgpt
@@ -103,3 +103,17 @@ manager_approval:
   approval_note: >
     طبق تأیید مالک برای اجرای docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md؛
     مأموریت مستندسازی روشن و محدود، مناسب Antigravity، با بازبینی Codex/ChatGPT.
+
+closure:
+  closed_at: "2026-11-09"
+  independent_review_verdict: APPROVED
+  final_manager_vote: APPROVED
+  evidence:
+    - docs/ai/tasks/TASK-0001/IMPLEMENTATION_REPORT.md
+    - docs/ai/tasks/TASK-0001/REVIEW_REPORT.md
+  doc_sync_note: >
+    محتوای نهایی DRAFT_MODULE_MAP.md توسط مدیر (نه کدنویس) در
+    docs/ai/architecture/MODULE_MAP.md ادغام شد، با افزودن یادداشت
+    صریح اینکه عبارت «تراکنش دوطرفه/بدهکار و بستانکار» یک پیشنهاد
+    طراحی است، نه تصمیم تصویب‌شده؛ طبق خطر باقی‌مانده‌ای که بازبین
+    مستقل (chatgpt) اعلام کرد.

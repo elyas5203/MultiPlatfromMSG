@@ -49,6 +49,7 @@ model Staff {
   tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   staffTeams StaffTeam[]
 
+  @@unique([tenantId, id])
   @@unique([tenantId, email])
   @@index([tenantId])
   @@map("staff")
@@ -65,6 +66,7 @@ model Team {
   tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   staffTeams StaffTeam[]
 
+  @@unique([tenantId, id])
   @@index([tenantId])
   @@map("teams")
 }
@@ -78,10 +80,10 @@ model StaffTeam {
   createdAt DateTime @default(now()) @map("created_at")
 
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  staff     Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  staff     Staff    @relation(fields: [tenantId, staffId], references: [tenantId, id], onDelete: Cascade)
+  team      Team     @relation(fields: [tenantId, teamId], references: [tenantId, id], onDelete: Cascade)
 
-  @@unique([staffId, teamId])
+  @@unique([tenantId, staffId, teamId])
   @@index([tenantId])
   @@map("staff_teams")
 }

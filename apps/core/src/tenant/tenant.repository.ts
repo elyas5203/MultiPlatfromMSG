@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { assertValidTenantId } from './tenant-scope';
 import { Tenant, Brand, Staff, Team, StaffTeam } from '@prisma/client';

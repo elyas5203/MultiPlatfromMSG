@@ -1,29 +1,33 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
-const DEFAULT_DEV_DATABASE_URL =
-  'postgresql://postgres@127.0.0.1:54332/postgres?schema=public';
-
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    const dbUrl = process.env.DATABASE_URL || DEFAULT_DEV_DATABASE_URL;
-    super({
-      datasources: {
-        db: {
-          url: dbUrl,
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl) {
+      super({
+        datasources: {
+          db: {
+            url: dbUrl,
+          },
         },
-      },
-    });
+      });
+    } else {
+      super();
+    }
   }
 
   async onModuleInit(): Promise<void> {
-    // Connect lazily or attempt connection if server is already up.
-    // If server is starting up or in unit tests, PrismaClient connects on first database query.
-    try {
-      await this.$connect();
-    } catch {
-      // Ignored during module init; first query or explicit test ping will connect.
+    // When DATABASE_URL is configured, attempt connection on module initialization.
+    // In unit test contexts where DATABASE_URL is not set or DB is unavailable,
+    // connection failure does not prevent NestJS context creation for non-DB providers.
+    if (process.env.DATABASE_URL) {
+      try {
+        await this.$connect();
+      } catch {
+        // Ignored during module init; database tests perform explicit readiness check.
+      }
     }
   }
 

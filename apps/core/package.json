@@ -1,9 +1,10 @@
-﻿{
+{
   "name": "@multiplatformmsg/core",
   "version": "0.1.0",
   "private": true,
   "description": "MultiPlatformMsg local core skeleton and in-memory tenant boundary verification",
   "scripts": {
+    "postinstall": "prisma generate",
     "build": "tsc",
     "test": "node --test dist/test/tenant-scope.test.js dist/test/tenant-db-isolation.test.js"
   },

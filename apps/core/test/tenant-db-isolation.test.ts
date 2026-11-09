@@ -1,8 +1,5 @@
 import { describe, it, before, after, beforeEach } from 'node:test';
 import * as assert from 'node:assert';
-import { spawn, ChildProcess, execSync } from 'node:child_process';
-import * as net from 'node:net';
-import * as fs from 'node:fs';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/database/prisma.service';
@@ -12,88 +9,58 @@ import {
   TenantScopeInvalidError,
 } from '../src/tenant/tenant-scope';
 
-// Ensure DATABASE_URL is pointed to our local test PostgreSQL instance
-process.env.DATABASE_URL =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres@127.0.0.1:54332/postgres?schema=public';
+/**
+ * Integration Test: PostgreSQL Multi-Tenancy Boundary & Integrity Verification (AC-02)
+ *
+ * NOTE ON ARCHITECTURAL BOUNDARIES:
+ * 1. Foreign Key Integrity: At the database constraint level, composite foreign keys
+ *    (tenant_id, staff_id) and (tenant_id, team_id) strictly enforce that StaffTeam
+ *    memberships cannot reference staff or teams belonging to different tenants.
+ * 2. Query Read/Write Boundary: Enforced at the Repository application layer via explicit
+ *    tenant_id scoping and validation (assertValidTenantId). Row-Level Security (RLS)
+ *    is not yet implemented and is planned for future phases.
+ * 3. Test Isolation: This suite requires an explicit DATABASE_URL pointing to a dedicated
+ *    test database. It does not auto-spawn, kill, or wipe arbitrary host processes or ports.
+ */
 
-async function isPortOpen(port: number, host: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const socket = new net.Socket();
-    socket.setTimeout(800);
-    socket.on('connect', () => {
-      socket.destroy();
-      resolve(true);
-    });
-    socket.on('timeout', () => {
-      socket.destroy();
-      resolve(false);
-    });
-    socket.on('error', () => {
-      socket.destroy();
-      resolve(false);
-    });
-    socket.connect(port, host);
-  });
-}
-
-describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verification (AC-02)', () => {
+describe('PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (AC-02)', () => {
   let app: any;
   let repository: TenantRepository;
   let prisma: PrismaService;
-  let spawnedPg: ChildProcess | null = null;
 
   // Synthetic test tenant IDs
   const TENANT_ALPHA = 'org_synthetic_alpha_101';
   const TENANT_BETA = 'org_synthetic_beta_202';
 
   before(async () => {
-    // 1. Check if PostgreSQL is already listening on 127.0.0.1:54332
-    const running = await isPortOpen(54332, '127.0.0.1');
-    if (!running) {
-      // Look for standalone test postgres binary
-      const pgBin = 'C:\\Users\\kingk\\.openmausbot\\tmp\\pg16\\bin\\postgres.exe';
-      const pgData = 'C:\\Users\\kingk\\.openmausbot\\tmp\\pg16_data';
-      if (fs.existsSync(pgBin) && fs.existsSync(pgData)) {
-        spawnedPg = spawn(pgBin, ['-D', pgData, '-p', '54332', '-h', '127.0.0.1'], {
-          stdio: 'ignore',
-          detached: false,
-        });
-
-        for (let i = 0; i < 30; i++) {
-          await new Promise((r) => setTimeout(r, 200));
-          if (await isPortOpen(54332, '127.0.0.1')) {
-            break;
-          }
-        }
-      } else {
-        throw new Error(
-          'PostgreSQL server is not running on port 54332 and fallback binary not found.',
-        );
-      }
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      throw new Error(
+        'DATABASE_URL environment variable is required to run PostgreSQL integration tests.',
+      );
     }
 
-    // 2. Initialize NestJS Application Context & resolve providers
+    // Initialize NestJS Application Context & resolve providers
     app = await NestFactory.createApplicationContext(AppModule, {
       logger: false,
     });
     repository = app.get(TenantRepository);
     prisma = app.get(PrismaService);
 
-    // 3. Retry querying until PostgreSQL is completely query-ready
-    let dbReady = false;
-    for (let i = 0; i < 50; i++) {
+    // Verify database connectivity
+    let connected = false;
+    for (let i = 0; i < 30; i++) {
       try {
         await prisma.$queryRawUnsafe('SELECT 1');
-        dbReady = true;
+        connected = true;
         break;
       } catch {
-        await new Promise((r) => setTimeout(r, 250));
+        await new Promise((r) => setTimeout(r, 200));
       }
     }
 
-    if (!dbReady) {
-      throw new Error('Timed out waiting for PostgreSQL database to be query-ready');
+    if (!connected) {
+      throw new Error(`Unable to connect to PostgreSQL database at ${dbUrl}`);
     }
   });
 
@@ -103,23 +70,12 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
         await repository.clearTenant(TENANT_ALPHA);
         await repository.clearTenant(TENANT_BETA);
       } catch {
-        // Ignore cleanup errors during final shutdown
+        // Ignore cleanup errors on shutdown
       }
     }
 
     if (app) {
       await app.close();
-    }
-
-    if (spawnedPg) {
-      try {
-        execSync(
-          'C:\\Users\\kingk\\.openmausbot\\tmp\\pg16\\bin\\pg_ctl.exe stop -D C:\\Users\\kingk\\.openmausbot\\tmp\\pg16_data -m immediate',
-          { stdio: 'ignore' },
-        );
-      } catch {
-        spawnedPg.kill();
-      }
     }
   });
 
@@ -142,8 +98,8 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
     });
   });
 
-  describe('Synthetic Two-Tenant Real Database Isolation (AC-02)', () => {
-    it('should create and retrieve Brands with strict database-level tenant isolation', async () => {
+  describe('Synthetic Two-Tenant Repository Isolation & Composite FK Integrity (AC-02)', () => {
+    it('should create and retrieve Brands with strict repository tenant filtering', async () => {
       const brandAlpha = await repository.createBrand(TENANT_ALPHA, {
         name: 'Alpha Retail Brand',
         code: 'ALPHA-RT',
@@ -166,12 +122,12 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
       assert.ok(foundBeta);
       assert.strictEqual(foundBeta?.name, 'Beta Tech Brand');
 
-      // Cross-tenant leak prevention: Tenant Beta must NEVER see Tenant Alpha's brand
+      // Cross-tenant query filtering: Tenant Beta must not see Tenant Alpha brand
       const crossRead = await repository.findBrandById(TENANT_BETA, brandAlpha.id);
       assert.strictEqual(
         crossRead,
         null,
-        'Tenant Beta must not be able to read Tenant Alpha brand from PostgreSQL',
+        'Tenant Beta must not be able to read Tenant Alpha brand through repository',
       );
 
       // Collection isolation
@@ -185,7 +141,7 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
       assert.strictEqual(betaBrands[0].id, brandBeta.id);
     });
 
-    it('should create and retrieve Staff records with strict database-level isolation', async () => {
+    it('should create and retrieve Staff records with strict repository tenant filtering', async () => {
       const staffAlpha = await repository.createStaff(TENANT_ALPHA, {
         email: 'alice@alpha.example.com',
         fullName: 'Alice Alpha',
@@ -221,7 +177,7 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
       assert.strictEqual(betaStaff[0].id, staffBeta.id);
     });
 
-    it('should create and retrieve Teams with strict database-level isolation', async () => {
+    it('should create and retrieve Teams with strict repository tenant filtering', async () => {
       const teamAlpha = await repository.createTeam(TENANT_ALPHA, {
         name: 'Alpha Customer Support',
         description: 'First line support for Alpha',
@@ -255,7 +211,7 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
       assert.strictEqual(betaTeams[0].id, teamBeta.id);
     });
 
-    it('should manage Staff-Team membership and prevent cross-tenant assignment', async () => {
+    it('should manage Staff-Team membership and prevent cross-tenant assignment at Repository layer', async () => {
       const staffAlpha = await repository.createStaff(TENANT_ALPHA, {
         email: 'alice.member@alpha.example.com',
         fullName: 'Alice Member',
@@ -294,14 +250,12 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
       );
       assert.strictEqual(assignmentBeta.tenantId, TENANT_BETA);
 
-      // Cross-tenant membership assignment attempts MUST throw errors:
-      // 1. Attempting to assign Tenant Beta's staff to Tenant Alpha's team under Alpha's scope
+      // Repository layer pre-check prevents cross-tenant assignment
       await assert.rejects(
         () => repository.assignStaffToTeam(TENANT_ALPHA, staffBeta.id, teamAlpha.id),
         (err: Error) => err.message.includes('not found within tenant scope'),
       );
 
-      // 2. Attempting to assign Tenant Alpha's staff to Tenant Beta's team under Beta's scope
       await assert.rejects(
         () => repository.assignStaffToTeam(TENANT_BETA, staffAlpha.id, teamBeta.id),
         (err: Error) => err.message.includes('not found within tenant scope'),
@@ -312,7 +266,6 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
       assert.strictEqual(alphaMembers.length, 1);
       assert.strictEqual(alphaMembers[0].staffId, staffAlpha.id);
 
-      // Querying Tenant Alpha's team from Tenant Beta's scope returns empty
       const leakedMembers = await repository.listTeamMembers(TENANT_BETA, teamAlpha.id);
       assert.strictEqual(leakedMembers.length, 0);
 
@@ -323,6 +276,67 @@ describe('PostgreSQL Real Database Multi-Tenancy Isolation & Boundary Verificati
 
       const leakedStaffTeams = await repository.listStaffTeams(TENANT_BETA, staffAlpha.id);
       assert.strictEqual(leakedStaffTeams.length, 0);
+    });
+
+    it('must enforce composite foreign keys at the database level and reject cross-tenant inserts (AC-02 negative test)', async () => {
+      // Create staff and team in separate tenants
+      const staffAlpha = await repository.createStaff(TENANT_ALPHA, {
+        email: 'alice.fk@alpha.example.com',
+        fullName: 'Alice FK',
+      });
+
+      const teamBeta = await repository.createTeam(TENANT_BETA, {
+        name: 'Beta Team FK',
+      });
+
+      // Negative Test 1: Direct SQL insert attempting to link Tenant Alpha's staff to Tenant Beta's team under Tenant Alpha scope.
+      // The composite FK (tenant_id, team_id) -> teams(tenant_id, id) MUST fail at DB engine level.
+      await assert.rejects(
+        async () => {
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO "staff_teams" ("id", "tenant_id", "staff_id", "team_id", "created_at")
+             VALUES ($1, $2, $3, $4, NOW())`,
+            'st-cross-1',
+            TENANT_ALPHA,
+            staffAlpha.id,
+            teamBeta.id,
+          );
+        },
+        (err: any) => {
+          // PostgreSQL foreign key violation error (code 23503 / Prisma P2003 / P2010)
+          const msg = String(err.message || err);
+          return (
+            msg.includes('foreign key constraint') ||
+            msg.includes('staff_teams_tenant_id_team_id_fkey') ||
+            msg.includes('23503')
+          );
+        },
+        'Database engine must reject cross-tenant staff_team insert via composite FK (tenant_id, team_id)',
+      );
+
+      // Negative Test 2: Direct SQL insert attempting to link Tenant Alpha's staff to Tenant Beta's team under Tenant Beta scope.
+      // The composite FK (tenant_id, staff_id) -> staff(tenant_id, id) MUST fail at DB engine level.
+      await assert.rejects(
+        async () => {
+          await prisma.$executeRawUnsafe(
+            `INSERT INTO "staff_teams" ("id", "tenant_id", "staff_id", "team_id", "created_at")
+             VALUES ($1, $2, $3, $4, NOW())`,
+            'st-cross-2',
+            TENANT_BETA,
+            staffAlpha.id,
+            teamBeta.id,
+          );
+        },
+        (err: any) => {
+          const msg = String(err.message || err);
+          return (
+            msg.includes('foreign key constraint') ||
+            msg.includes('staff_teams_tenant_id_staff_id_fkey') ||
+            msg.includes('23503')
+          );
+        },
+        'Database engine must reject cross-tenant staff_team insert via composite FK (tenant_id, staff_id)',
+      );
     });
 
     it('should strictly limit clearTenant cleanup to the specified tenant', async () => {

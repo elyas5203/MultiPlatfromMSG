@@ -1,4 +1,4 @@
-﻿import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { DatabaseModule } from './database/database.module';
 import { InMemoryTenantScopeRepository } from './tenant/tenant-scope';
 import { TenantRepository } from './tenant/tenant.repository';

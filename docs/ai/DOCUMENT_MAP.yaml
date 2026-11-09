@@ -6,6 +6,7 @@ owner_intent: docs/ai/OWNER_INTENT.md
 manager_bootstrap: docs/ai/governance/MANAGER_BOOTSTRAP.md
 mausbot_setup: docs/ai/governance/MAUSBOT_SETUP_CHECKLIST.md
 chief_first_message: docs/ai/governance/CHIEF_FIRST_MESSAGE.md
+autonomous_analysis_goal: docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md
 sections:
   governance:
     summary: "نقش‌ها، مجوزها، نبایدها، شواهد و چرخه مأموریت"

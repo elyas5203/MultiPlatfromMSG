@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0009
 title: "رفع ناسازگاری تحلیلی مالکیت موجودیت پیام"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: chatgpt
 reviewer: antigraviti-9
@@ -72,3 +72,8 @@ manager_approval:
   verdict: APPROVED
   approved_at: "2026-11-09"
   approval_note: "مأموریت محدود رفع F-01، بدون کد یا تغییر سند مادر."
+manager_final_verdict:
+  verdict: APPROVED
+  reviewed_commit: "db8c3cb2e9016149fd6b36f002f6f6bb9bcdc70f"
+  decided_at: "2026-11-09"
+  note: "گزارش تحلیلی مالکیت پیام با رأی مستقل تأیید شد و یافته F-01 را پوشش داد؛ اسناد مادر با تصمیم معماری هماهنگ خواهند شد."

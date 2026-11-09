@@ -1,0 +1,114 @@
+schema_version: 1
+task_id: TASK-0013
+title: "فاز ۱ ب — پایگاه داده واقعی PostgreSQL، موجودیت‌های پایه سازمان و اجرای اجباری tenant_id در لایه داده"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-15
+reviewer: chatgpt
+
+objective: >
+  روی اسکلت apps/core از TASK-0012 (که فقط آزمون درون‌حافظه‌ای مرز سازمانی بود)
+  یک اتصال واقعی PostgreSQL محلی اضافه کن، موجودیت‌های پایه Tenant، Brand،
+  Staff، Team (و رابطه عضویت Staff-Team) را با Prisma schema و migration
+  واقعی تعریف کن، و یک لایه Repository/Service بساز که اجرای اجباری
+  tenant_id را (با همان الگوی خطاهای TenantScopeMissingError/
+  TenantScopeInvalidError موجود در apps/core/src/tenant/tenant-scope.ts)
+  روی یک پایگاه داده واقعی - نه فقط حافظه - اثبات کند.
+business_reason: "ادامه مستقیم فاز ۱ (زیرساخت پایه و چندسازمانی) طبق docs/ai/product/DEVELOPMENT_PHASES.md، پس از تکمیل اثبات مفهومی TASK-0012؛ مجوز پیشروی بدون توقف میان‌مرحله‌ای توسط مالک محصول در گفتگوی ۲۰۲۶-۱۱-۰۹ («تاییده کلی... منتظر تایید من نباش... تو مدیر پروژه‌ای») صادر شده است."
+out_of_scope:
+  - "احراز هویت کاربر، ورود OTP یا گذرواژه (تصمیم باز مالک طبق DEVELOPMENT_PHASES.md، فاز ۱) — فقط موجودیت Staff ساخته می‌شود، بدون مکانیزم Login"
+  - "اجرای واقعی RBAC (بررسی مجوز روی Endpoint)؛ همین مرحله فقط موجودیت Role/نقش را در schema تعریف می‌کند، نه Guard یا Middleware اعمال مجوز"
+  - "ماژول رمزنگاری Secret (AES-256-GCM)"
+  - "هر Endpoint شبکه‌ای عمومی یا Listener در دسترس شبکه؛ هر اجرای محلی فقط روی 127.0.0.1 باشد"
+  - "RabbitMQ، Redis، Contacts، Campaigns، Billing، Sender/Routing یا هر ماژول دیگر غیر از هسته سازمان/برند/کارمند/تیم"
+  - "داده واقعی مشتری، Secret واقعی، رمز عبور واقعی یا credential پایگاه داده قابل‌استفاده در محیط تولید"
+  - "هرگونه استقرار یا Container غیر از یک سرویس PostgreSQL محلی/تست با credential نمونه، فقط برای اجرای تست‌های این مأموریت"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/architecture/TECH_STACK.md
+  - docs/ai/architecture/MODULE_MAP.md
+  - docs/ai/architecture/DATA_MODEL.md
+  - docs/ai/product/DEVELOPMENT_PHASES.md
+  - docs/ai/tasks/TASK-0012/IMPLEMENTATION_REPORT.md
+  - docs/ai/tasks/TASK-0012/REVIEW_REPORT.md
+allowed_paths:
+  - "apps/core/prisma/schema.prisma"
+  - "apps/core/prisma/migrations/**"
+  - "apps/core/src/database/database.module.ts"
+  - "apps/core/src/database/prisma.service.ts"
+  - "apps/core/src/tenant/tenant-scope.ts"
+  - "apps/core/src/tenant/tenant.repository.ts"
+  - "apps/core/src/app.module.ts"
+  - "apps/core/test/tenant-scope.test.ts"
+  - "apps/core/test/tenant-db-isolation.test.ts"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "apps/core/tsconfig.json"
+  - "apps/core/.env.example"
+  - "apps/core/docker-compose.yml"
+  - "apps/core/.gitignore"
+blocked_paths:
+  - "docs/ai/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "apps/core/.env"
+  - "**/.env"
+change_budget:
+  max_files_changed: 25
+  max_added_dependencies: 8
+  allowed_dependencies:
+    - "@nestjs/common"
+    - "@nestjs/core"
+    - "@nestjs/config"
+    - "reflect-metadata"
+    - "rxjs"
+    - "typescript"
+    - "@types/node"
+    - "prisma"
+    - "@prisma/client"
+  database_change_allowed: true
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "Prisma schema موجودیت‌های Tenant، Brand، Staff، Team و رابطه عضویت را تعریف می‌کند؛ Brand/Staff/Team هرکدام دارای ستون اجباری tenant_id با کلید خارجی به Tenant هستند؛ migration روی یک نمونه PostgreSQL محلی/تست بدون خطا اجرا می‌شود."
+    verification: "npx prisma migrate deploy (یا معادل) با exit code صفر روی نمونه تست؛ بازبینی schema.prisma و فایل‌های migration."
+  - id: AC-02
+    statement: "لایه Repository هرگونه خواندن/نوشتن Brand/Staff/Team را بدون tenant_id معتبر رد می‌کند و هرگز رکورد سازمان دیگر را برنمی‌گرداند؛ این رفتار روی پایگاه داده واقعی (نه فقط حافظه) آزموده می‌شود."
+    verification: "تست یکپارچه با دو سازمان ساختگی روی نمونه PostgreSQL تست؛ تلاش خواندن/نوشتن بدون tenant_id یا با tenant_id نامعتبر باید خطای TenantScopeMissingError/TenantScopeInvalidError بدهد."
+  - id: AC-03
+    statement: "هیچ Endpoint شبکه‌ای عمومی، منطق RBAC اعمال‌شده، ماژول رمزنگاری، داده واقعی مشتری یا credential غیرنمونه در کد یا migration وجود ندارد؛ docker-compose فقط یک سرویس Postgres محلی/تست با credential نمونه راه‌اندازی می‌کند."
+    verification: "بازبینی Diff، جستجوی وابستگی/مسیرهای ممنوع، بازرسی docker-compose.yml و .env.example."
+  - id: AC-04
+    statement: "گزارش تحویل صریحاً دو Gate باز باقی‌مانده (شیوه احراز هویت OTP/گذرواژه، و اعمال واقعی RBAC) را به عنوان کار آینده و نه این مأموریت ثبت می‌کند."
+    verification: "گزارش تحویل و خطر باقی‌مانده."
+required_tests:
+  - "npm ci در apps/core با dependencyهای مجاز و نسخه‌های pin شده"
+  - "اجرای migration روی یک نمونه PostgreSQL محلی/تست که فقط در پوشه کاری مستقل مجری بالا می‌آید (credential نمونه، هرگز مشترک با مدیر یا سایر implementerها)"
+  - "npm run build و npm test (شامل تست یکپارچه Isolation روی پایگاه داده واقعی) با exit code واقعی"
+  - "git diff --check و کنترل دقیق allowed_paths/blocked_paths"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از رأی مستقل، مدیر وضعیت فاز ۱ و گزارش‌های مأموریت را ثبت می‌کند."
+stop_conditions:
+  - "پوشه کاری واقعی مجری همان E:/projects/MultiPlatformMsg باشد یا فایل یا پایگاه داده/Container مشترک با مدیر/مجری دیگر باشد"
+  - "نیاز به فایل یا dependency خارج از فهرست مجاز"
+  - "نیاز به RBAC واقعی، Endpoint عمومی، احراز هویت یا تصمیم نقش/ورود"
+  - "تلاش برای Commit کردن فایل .env واقعی یا credential واقعی پایگاه داده"
+  - "تست اجباری اجرا نشود یا Secret/داده واقعی دیده شود"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: "مالک در گفتگوی تلگرام و در همین گفتگو («تاییده کلی... منتظر تایید من نباش... تو مدیر پروژه‌ای») تفویض صریح اختیار پیشروی مرحله‌به‌مرحله فاز ۱ را به مدیر هوش مصنوعی داده است. این تفویض به معنای مجوز دائمی نقش مدیریتی (تنظیم، ارزیابی و بستن قراردادهای مأموریت) است، نه مجوز کدنویسی مستقیم توسط مدیر و نه دور زدن Gateهای تصمیم مالک که صریحاً در DEVELOPMENT_PHASES.md علامت‌گذاری شده‌اند (شیوه احراز هویت، قیمت‌گذاری، نام تجاری نهایی). این قرارداد فقط پایگاه داده واقعی و موجودیت‌های پایه سازمان را مجاز می‌کند و هیچ‌یک از آن Gateها را باز نمی‌کند."

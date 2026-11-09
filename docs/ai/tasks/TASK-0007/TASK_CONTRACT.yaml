@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0007
 title: "پیش‌نویس برنامه فازبندی توسعه و معیار ورود و خروج هر فاز"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-14
 reviewer: chatgpt

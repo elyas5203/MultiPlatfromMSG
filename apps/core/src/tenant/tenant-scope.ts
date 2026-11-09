@@ -138,7 +138,7 @@ export class InMemoryTenantScopeRepository {
   }
 
   /**
-   * Alias for clearTenant: clears records strictly within the boundary of the specified tenant.
+   * Clears records strictly within the boundary of the specified tenant.
    * Cross-tenant wipe without tenantId is strictly prohibited.
    */
   clear(tenantId: unknown): void {
@@ -156,14 +156,6 @@ export class InMemoryTenantScopeRepository {
         this.records.delete(key);
       }
     }
-  }
-
-  /**
-   * Internal test harness utility: resets all in-memory entries between test suites.
-   * Explicitly marked and restricted for test harness environments only.
-   */
-  _testResetAllForTestingOnly(): void {
-    this.records.clear();
   }
 
   private compositeKey(tenantId: string, id: string): string {

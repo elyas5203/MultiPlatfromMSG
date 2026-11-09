@@ -6,6 +6,7 @@ sections:
   governance:
     summary: "نقش‌ها، مجوزها، نبایدها، شواهد و چرخه مأموریت"
     index: docs/ai/governance/GOVERNANCE_MANIFEST.yaml
+    team_operating_model: docs/ai/governance/AI_TEAM_OPERATING_MODEL.md
   product:
     summary: "تعریف محصول، محدوده نسخه اول و موارد خارج از محدوده"
     index: docs/ai/product/REQUIREMENTS_INDEX.md

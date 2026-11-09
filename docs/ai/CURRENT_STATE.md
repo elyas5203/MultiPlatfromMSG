@@ -3,7 +3,7 @@ doc_id: DOC-STATE-CURRENT
 owner_domain: governance
 status: active
 version: 1.0.0
-last_verified_commit: pending-first-commit
+last_verified_commit: initialized-on-2026-11-09
 ---
 
 # وضعیت جاری پروژه
@@ -18,6 +18,8 @@ last_verified_commit: pending-first-commit
 - فایل‌های قدیمی با شمارش مسیر/اندازه، SHA-256 فایل‌های اصلی و Commit Git تطبیق داده شدند.
 - فناوری پیشنهادی ثبت شده ولی تا تصویب اسناد معماری، کد اجرایی ایجاد نمی‌شود.
 - نام تجاری نهایی هنوز انتخاب نشده؛ `MultiPlatformMsg` فقط نام داخلی است.
+- مخزن تمیز جدید به GitHub در `elyas5203/MultiPlatfromMSG` متصل شده است؛ غلط تایپی نام مخزن بعداً قابل اصلاح است.
+- تاریخچه Git پروژه قدیمی وارد مخزن جدید نشده و نسخه قابل‌بازیابی آن خارج از ریشه محصول نگهداری می‌شود.
 
 ## گام فعال
 

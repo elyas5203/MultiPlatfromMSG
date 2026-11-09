@@ -28,6 +28,7 @@ last_verified_commit: pending-first-commit
 - قوانین بازبین: `docs/ai/governance/REVIEWER_PROTOCOL.md`
 - نبایدهای مطلق: `docs/ai/governance/ABSOLUTE_PROHIBITIONS.md`
 - چرخه اجباری هر کار: `docs/ai/governance/TASK_LIFECYCLE.md`
+- مدل همکاری تیم هوش مصنوعی: `docs/ai/governance/AI_TEAM_OPERATING_MODEL.md`
 - محدوده نسخه اول: `docs/ai/product/VERSION_ONE_SCOPE.md`
 - معماری کلان: `docs/ai/architecture/SYSTEM_CONTEXT.md`
 

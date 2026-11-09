@@ -20,11 +20,26 @@ sections:
       - docs/ai/product/PRODUCT_VISION.md
       - docs/ai/product/VERSION_ONE_SCOPE.md
       - docs/ai/product/NON_GOALS.md
+      - docs/ai/product/TENANCY_AND_ACCESS.md
+      - docs/ai/product/CONTACTS_AND_CONSENT.md
+      - docs/ai/product/CAMPAIGN_LIFECYCLE.md
+      - docs/ai/product/TEAM_INBOX.md
+      - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+      - docs/ai/product/BILLING_AND_CREDITS.md
+      - docs/ai/product/ROLES_AND_PERMISSIONS.md
+      - docs/ai/product/UX_FLOWS_AND_PAGES.md
+      - docs/ai/product/CHANNEL_RESEARCH.md
+      - docs/ai/product/INTEGRATIONS_AND_CHANNELS.md
+      - docs/ai/product/OBSERVABILITY_AND_OPERATIONS.md
+      - docs/ai/product/DEVELOPMENT_PHASES.md
+      - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
   architecture:
     summary: "زمینه سیستم، فناوری و مرزهای فنی"
     documents:
       - docs/ai/architecture/SYSTEM_CONTEXT.md
       - docs/ai/architecture/TECH_STACK.md
+      - docs/ai/architecture/MODULE_MAP.md
+      - docs/ai/architecture/DATA_MODEL.md
   decisions:
     summary: "تصمیم‌های قطعی مستقل و قابل جایگزینی"
     directory: docs/ai/decisions

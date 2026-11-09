@@ -1,0 +1,84 @@
+schema_version: 1
+task_id: TASK-0011
+title: "ممیزی نهایی آمادگی دروازه صفر پس از رفع F-01 و F-03"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: chatgpt
+reviewer: antigraviti-9
+
+objective: >
+  فقط یک گزارش خواندنی از پوشش ۱۲ هدف تحلیل، رفع یافته‌های F-01 تا F-04،
+  وضعیت شرطی F-05/F-06، تصمیم‌های باز و آمادگی یا مانع ورود به فاز کدنویسی بساز.
+  ادعای آماده‌بودن را فقط با شاهد سندی و شرط Gate 0 بیان کن.
+business_reason: "پس از بسته‌شدن TASK-0009 و TASK-0010 و هماهنگی اسناد مادر، گزارش آمادگی نهایی لازم است."
+out_of_scope:
+  - "تغییر تصمیم محصول، کد محصول، اتصال، پایلوت یا ارسال واقعی"
+  - "تغییر اسناد مادر، اعلام خودکار شروع کدنویسی یا انتخاب تعرفه و ارائه‌دهنده"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md
+  - docs/ai/tasks/TASK-0008/CONSISTENCY_AUDIT.md
+  - docs/ai/tasks/TASK-0009/MESSAGE_OWNERSHIP_ANALYSIS.md
+  - docs/ai/tasks/TASK-0010/INTEGRATION_CONTRACTS_ANALYSIS.md
+  - docs/ai/CONTEXT_COVERAGE.md
+  - docs/ai/DOCUMENT_MAP.yaml
+  - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
+  - docs/ai/product/DEVELOPMENT_PHASES.md
+  - docs/ai/product/INTEGRATIONS_AND_CHANNELS.md
+  - docs/ai/architecture/MODULE_MAP.md
+  - docs/ai/architecture/DATA_MODEL.md
+  - docs/ai/product/ROLES_AND_PERMISSIONS.md
+  - docs/ai/product/UX_FLOWS_AND_PAGES.md
+allowed_paths:
+  - "docs/ai/tasks/TASK-0011/DRAFT_GATE_ZERO_READINESS.md"
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - ".env*"
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "هر ۱۲ هدف تحلیل با سند و وضعیت پوشش ردیابی شود."
+    verification: "تطبیق با AUTONOMOUS_ANALYSIS_GOAL و DOCUMENT_MAP."
+  - id: AC-02
+    statement: "F-01 تا F-06 با شاهد فعلی و وضعیت بسته/باز دقیق بررسی شوند."
+    verification: "تطبیق با ممیزی TASK-0008 و اصلاحات TASK-0009/0010."
+  - id: AC-03
+    statement: "تصمیم‌های باز، مجوز قبلی مالک برای شروع کدنویسی و Gate جداگانه پایلوت/عرضه تفکیک شوند."
+    verification: "تطبیق با CURRENT_STATE، OPEN_PRODUCT_QUESTIONS و DEVELOPMENT_PHASES."
+  - id: AC-04
+    statement: "رأی آمادگی PASS/FAIL/BLOCKED با موانع مشخص و پیشنهاد نخستین Task توسعه داده شود."
+    verification: "بازبینی مستقل گزارش و نبود ادعای بی‌پشتوانه."
+required_tests:
+  - "بازبینی دستی اسناد must_read، git diff --check و کنترل محدوده یک‌فایلی"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از رأی مستقل، مدیر گزارش نهایی را ثبت و CURRENT_STATE و CONTEXT_COVERAGE را هماهنگ می‌کند."
+stop_conditions:
+  - "نیاز به تغییر خارج از allowed_paths"
+  - "تعارض تصمیم مالک یا نیاز به Secret/داده واقعی"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: "ممیزی سندی محدود پس از رفع دو شکاف اصلی، بدون کد یا پایلوت."

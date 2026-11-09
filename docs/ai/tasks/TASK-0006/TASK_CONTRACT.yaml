@@ -4,7 +4,7 @@ title: "تحقیق مستند تلگرام شخصی و بله رسمی با تف
 contract_revision: 1
 status: APPROVED_FOR_IMPLEMENTATION
 owner: ai_manager
-implementer: antigraviti-14
+implementer: antigraviti-9
 reviewer: chatgpt
 
 objective: >
@@ -118,5 +118,5 @@ manager_approval:
     مأموریت فعال، ظرفیت کافی برای یک مأموریت جدید از سقف سه مأموریت
     هم‌زمان آزاد است. این Task مورد ۶ از هدف فعال را پوشش می‌دهد. implementer
     به‌دلیل وضوح کار (تحقیق مستند، نه تصمیم حساس) یک Antigravity
-    (antigraviti-14) است؛ reviewer به‌دلیل حساسیت ریسک عملیاتی (تعلیق
+    (antigraviti-9) است؛ reviewer به‌دلیل حساسیت ریسک عملیاتی (تعلیق
     حساب، محدودیت نرخ) عمداً chatgpt است، نه یک Antigravity دیگر.

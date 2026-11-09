@@ -4,6 +4,8 @@ entry_point: docs/ai/START_HERE.md
 current_state: docs/ai/CURRENT_STATE.md
 owner_intent: docs/ai/OWNER_INTENT.md
 manager_bootstrap: docs/ai/governance/MANAGER_BOOTSTRAP.md
+mausbot_setup: docs/ai/governance/MAUSBOT_SETUP_CHECKLIST.md
+chief_first_message: docs/ai/governance/CHIEF_FIRST_MESSAGE.md
 sections:
   governance:
     summary: "نقش‌ها، مجوزها، نبایدها، شواهد و چرخه مأموریت"

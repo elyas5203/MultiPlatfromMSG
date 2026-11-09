@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0005
 title: "پیش‌نویس مفهومی دفتر رویداد مالی و تعریف رویداد قابل‌صورتحساب"
 contract_revision: 1
-status: DRAFT
+status: APPROVED_FOR_IMPLEMENTATION
 owner: ai_manager
 implementer: chatgpt
 reviewer: antigraviti-elyas
@@ -107,12 +107,12 @@ stop_conditions:
   - "تمایل به تثبیت عدد قیمت یا تعرفه که در OPEN_PRODUCT_QUESTIONS.md باز است"
 
 manager_approval:
-  verdict: PENDING
-  approved_at: null
+  verdict: APPROVED
+  approved_at: "2026-11-09"
   approval_note: >
-    آماده‌سازی زودهنگام طبق docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md
-    (سقف سه مأموریت هم‌زمان). در حال حاضر TASK-0001..0003 در حال اجرا و
-    TASK-0004 در صف اولین فرصت آزاد است؛ این Task پس از آزاد شدن دومین
-    فرصت (یا بسته‌شدن دو مورد از سه مأموریت فعلی) تأیید و واگذار می‌شود.
-    implementer به‌دلیل حساسیت معماری/حسابداری مالی عمداً chatgpt انتخاب
-    شده، نه یک Antigravity؛ reviewer باید مستقل و غیر از chatgpt بماند.
+    TASK-0002 و TASK-0003 گزارش تکمیل اجرا دادند؛ با آزاد شدن دومین
+    ظرفیت از سقف سه مأموریت هم‌زمان (در کنار TASK-0001 که هنوز نزد
+    antigraviti-14 در حال اجراست و TASK-0004 که هم‌زمان به antigraviti-15
+    واگذار شد)، این Task تأیید و به implementer واگذار می‌شود. implementer
+    به‌دلیل حساسیت معماری/حسابداری مالی عمداً chatgpt انتخاب شده، نه یک
+    Antigravity؛ reviewer مستقل و غیر از chatgpt (antigraviti-elyas) است.

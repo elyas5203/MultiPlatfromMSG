@@ -1,0 +1,122 @@
+schema_version: 1
+task_id: TASK-0006
+title: "تحقیق مستند تلگرام شخصی و بله رسمی با تفکیک واقعیت/فرض/نیازمند پایلوت"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-14
+reviewer: chatgpt
+
+objective: >
+  یک فایل Markdown در پوشه همین Task ساخته شود که دانش موجود درباره دو
+  کانال شروع محصول (تلگرام شخصی از طریق MadelineProto/MTProto، و بله
+  رسمی از طریق API رسمی) را از اسناد موجود پروژه استخراج و با سه برچسب
+  صریح دسته‌بندی کند:
+  ۱) «واقعیت» — فقط چیزی که در اسناد موجود پروژه (TECH_STACK.md،
+  SENDER_ACCOUNTS_AND_ROUTING.md، VERSION_ONE_SCOPE.md،
+  ABSOLUTE_PROHIBITIONS.md) یا منبع رسمی ذکرشده از قبل تثبیت شده؛
+  ۲) «فرض» — برداشت منطقی که هنوز در هیچ سند رسمی تثبیت نشده و باید
+  صراحتاً به‌عنوان فرض علامت بخورد؛
+  ۳) «نیازمند پایلوت» — هرچیزی که فقط با آزمایش عملی (نرخ محدودیت واقعی،
+  رفتار FloodWait، پایداری Webhook بله، رفتار دقیق ارسال گروهی) معلوم
+  می‌شود.
+  برای هر مورد «واقعیت» باید منبع دقیق (نام فایل) ذکر شود. سند باید حداقل
+  موضوعات زیر را بپوشاند: محدودیت نرخ/حجم ارسال، ریسک تعلیق/Ban حساب
+  شخصی تلگرام، نیازمندی‌های احراز هویت بله رسمی، تفاوت قابلیت پاسخ/Webhook
+  میان دو کانال، و وابستگی هرکدام به حساب مدیریت‌شده در برابر حساب متصل
+  مشتری (طبق DATA_MODEL.md).
+
+business_reason: >
+  این خروجی مورد ۶ از «مراحل لازم» در
+  docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md است و در
+  docs/ai/CONTEXT_COVERAGE.md به‌عنوان «تحقیقات نهایی و مستند هر کانال»
+  هنوز باز ثبت شده بود.
+
+out_of_scope:
+  - "نوشتن یا تغییر هر کد در apps/**، services/**، packages/**، migrations/**"
+  - "اجرای عملی هر پایلوت یا تست واقعی روی حساب تلگرام/بله"
+  - "تثبیت هر عدد نرخ محدودیت که منبع رسمی یا سند پروژه آن را تثبیت نکرده است (باید «فرض» یا «نیازمند پایلوت» بماند)"
+  - "تغییر مستقیم docs/ai/product/** یا docs/ai/architecture/**"
+
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/product/PRODUCT_VISION.md
+  - docs/ai/product/VERSION_ONE_SCOPE.md
+  - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+  - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
+  - docs/ai/architecture/DATA_MODEL.md
+  - docs/ai/architecture/TECH_STACK.md
+
+allowed_paths:
+  - "docs/ai/tasks/TASK-0006/DRAFT_CHANNEL_RESEARCH.md"
+
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - "docs/ai/decisions/**"
+  - ".env*"
+
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+
+acceptance_criteria:
+  - id: AC-01
+    statement: "همه موضوعات الزامی (محدودیت نرخ/حجم، ریسک Ban، احراز هویت بله، تفاوت Webhook/پاسخ، وابستگی به نوع حساب) برای هر دو کانال پوشش داده شده‌اند."
+    verification: "بررسی مدیر."
+  - id: AC-02
+    statement: "هر مورد با یکی از سه برچسب «واقعیت»، «فرض»، «نیازمند پایلوت» علامت خورده؛ هیچ موردی بدون برچسب نیست."
+    verification: "بررسی مدیر."
+  - id: AC-03
+    statement: "هر مورد «واقعیت» دقیقاً نام فایل منبع را ذکر می‌کند؛ هیچ عدد یا ادعای تثبیت‌شده بدون منبع نیست."
+    verification: "تطبیق با اسناد must_read."
+  - id: AC-04
+    statement: "هیچ عدد نرخ محدودیت، آستانه Ban یا تضمین پایداری که در اسناد موجود تثبیت نشده، به‌عنوان «واقعیت» معرفی نشده است."
+    verification: "تطبیق متن."
+
+required_tests:
+  - "بررسی دستی مدیر و بازبین مستقل: تطبیق هر مورد با منبع ذکرشده"
+
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+
+documents_to_update:
+  - note: >
+      پس از تأیید بازبین، مدیر محتوای نهایی را در یک سند جدید
+      docs/ai/product/CHANNEL_RESEARCH.md (فایل جدید، نه افزوده به سند
+      موجود) ادغام می‌کند؛ این فایل در محدوده همین Task ساخته یا تغییر
+      داده نمی‌شود.
+
+stop_conditions:
+  - "نیاز به فایل خارج از allowed_paths"
+  - "ابهام در تصمیم محصول که در اسناد موجود پاسخ ندارد"
+  - "مشاهده Secret یا داده واقعی (توکن API، شماره حساب واقعی) در خروجی"
+  - "تمایل به تثبیت عدد نرخ محدودیت یا ریسک Ban بدون منبع رسمی"
+
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: >
+    با بسته‌شدن TASK-0002/0003/0005 و باقی‌ماندن فقط TASK-0004 به‌عنوان
+    مأموریت فعال، ظرفیت کافی برای یک مأموریت جدید از سقف سه مأموریت
+    هم‌زمان آزاد است. این Task مورد ۶ از هدف فعال را پوشش می‌دهد. implementer
+    به‌دلیل وضوح کار (تحقیق مستند، نه تصمیم حساس) یک Antigravity
+    (antigraviti-14) است؛ reviewer به‌دلیل حساسیت ریسک عملیاتی (تعلیق
+    حساب، محدودیت نرخ) عمداً chatgpt است، نه یک Antigravity دیگر.

@@ -1,0 +1,100 @@
+schema_version: 1
+task_id: TASK-0007
+title: "پیش‌نویس برنامه فازبندی توسعه و معیار ورود و خروج هر فاز"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-14
+reviewer: chatgpt
+
+objective: >
+  یک پیش‌نویس فارسی و قابل بررسی از فازهای توسعه پس از فاز تحلیل بساز.
+  برای هر فاز، هدف، خروجی قابل مشاهده، پیش‌نیاز، معیار ورود، معیار خروج،
+  آزمون/شاهد لازم و وابستگی به تصمیم مالک یا پایلوت را در جدول مشخص کن.
+  ترتیب فازها باید وابستگی‌های معماری و امنیت سازمان‌ها را رعایت کند.
+  هیچ فاز یا معیار نباید به‌معنی مجوز شروع کدنویسی، استقرار یا ارسال واقعی باشد.
+
+business_reason: >
+  خروجی ۱۱ هدف فعال در docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md
+  و شکاف ثبت‌شده در docs/ai/CONTEXT_COVERAGE.md.
+
+out_of_scope:
+  - "نوشتن هرگونه کد محصول یا تست اجرایی"
+  - "استقرار، Migration، پایلوت واقعی یا ارسال پیام"
+  - "تثبیت قیمت، محدودیت نرخ، نام برند یا تصمیم باز مالک"
+  - "تغییر مستقیم اسناد مادر محصول، معماری یا حاکمیت"
+
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md
+  - docs/ai/product/VERSION_ONE_SCOPE.md
+  - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
+  - docs/ai/architecture/MODULE_MAP.md
+  - docs/ai/architecture/DATA_MODEL.md
+  - docs/ai/product/CHANNEL_RESEARCH.md
+  - docs/ai/product/UX_FLOWS_AND_PAGES.md
+
+allowed_paths:
+  - "docs/ai/tasks/TASK-0007/DRAFT_DEVELOPMENT_PHASES.md"
+
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - "docs/ai/decisions/**"
+  - ".env*"
+
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+
+acceptance_criteria:
+  - id: AC-01
+    statement: "هر فاز هدف، خروجی، پیش‌نیاز و معیار ورود و خروج قابل بررسی دارد."
+    verification: "بررسی جدول فازها توسط مدیر و بازبین."
+  - id: AC-02
+    statement: "اولین فاز اجرایی با جداسازی سازمان‌ها، کنترل دسترسی، امنیت Secret و آزمون‌های پایه شروع می‌شود و وابستگی‌های دیگر فازها روشن‌اند."
+    verification: "تطبیق با DATA_MODEL.md و MODULE_MAP.md."
+  - id: AC-03
+    statement: "تصمیم‌های باز و پایلوت‌های کانال‌ها به عنوان Gate مشخص شده‌اند و هیچ عدد یا رفتار نامعلوم قطعی نشده است."
+    verification: "تطبیق با OPEN_PRODUCT_QUESTIONS.md و CHANNEL_RESEARCH.md."
+  - id: AC-04
+    statement: "شرط تأیید صریح مالک پیش از کدنویسی و استقرار/ارسال واقعی در برنامه حفظ شده است."
+    verification: "بررسی متن در برابر AUTONOMOUS_ANALYSIS_GOAL.md."
+
+required_tests:
+  - "بازبینی دستی مدیر و بازبین مستقل: تطبیق Gateها و وابستگی‌ها با اسناد must_read"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+
+documents_to_update:
+  - note: >
+      پس از تأیید بازبین، مدیر محتوای نهایی را در سند جدید
+      docs/ai/product/DEVELOPMENT_PHASES.md ثبت می‌کند.
+
+stop_conditions:
+  - "نیاز به نوشتن خارج از allowed_paths"
+  - "تناقض جدی میان اسناد مادر که ترتیب فازها را نامعلوم کند"
+  - "نیاز به تصمیم تجاری جدید برای تکمیل یک فاز؛ همان بخش BLOCKED و بقیه ادامه یابد"
+  - "مشاهده Secret یا داده واقعی"
+
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-09"
+  approval_note: "پس از بسته‌شدن TASK-0006، فازبندی توسعه شکاف اصلی بعدی هدف تحلیل است؛ کار فقط سندی است."

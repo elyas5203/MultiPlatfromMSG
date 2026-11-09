@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0006
 title: "تحقیق مستند تلگرام شخصی و بله رسمی با تفکیک واقعیت/فرض/نیازمند پایلوت"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-9
 reviewer: chatgpt
@@ -120,3 +120,10 @@ manager_approval:
     به‌دلیل وضوح کار (تحقیق مستند، نه تصمیم حساس) یک Antigravity
     (antigraviti-9) است؛ reviewer به‌دلیل حساسیت ریسک عملیاتی (تعلیق
     حساب، محدودیت نرخ) عمداً chatgpt است، نه یک Antigravity دیگر.
+
+final_verdict:
+  verdict: APPROVED
+  reviewed_commit: bc8e693
+  reviewed_by: chatgpt
+  closed_at: "2026-11-09"
+  note: "واقعیت، فرض و نیازمند پایلوت تفکیک شدند؛ رفتار واقعی کانال‌ها هنوز پایلوت نشده است."

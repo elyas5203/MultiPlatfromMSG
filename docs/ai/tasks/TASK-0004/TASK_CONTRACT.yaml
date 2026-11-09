@@ -1,0 +1,108 @@
+schema_version: 1
+task_id: TASK-0004
+title: "پیش‌نویس جریان‌های اصلی UX و نقشه صفحات فارسی/RTL"
+contract_revision: 1
+status: DRAFT
+owner: ai_manager
+implementer: antigraviti-15
+reviewer: chatgpt
+
+objective: >
+  یک فایل Markdown در پوشه همین Task ساخته شود که مهم‌ترین جریان‌های
+  کاربری نسخه اول (ورود/ثبت‌نام سازمان، ساخت کمپین از فایل تا ارسال،
+  Inbox و پاسخ‌گویی تیمی، اتصال حساب فرستنده، مشاهده اعتبار/کیف پول،
+  داشبورد سوپرادمین) را گام‌به‌گام و به‌زبان ساده فارسی توضیح دهد و
+  فهرست صفحات اصلی (نام صفحه، هدف، کاربر مجاز) را به‌صورت جدول بسازد.
+  این سند فقط تحلیلی/UX است؛ هیچ طراحی گرافیکی یا کد رابط ساخته نمی‌شود.
+
+business_reason: >
+  این خروجی مورد ۵ از «مراحل لازم» در
+  docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md و مورد «نقشه صفحات و
+  جریان‌های UX» در docs/ai/CONTEXT_COVERAGE.md است.
+
+out_of_scope:
+  - "نوشتن یا تغییر هر کد در apps/**، services/**، packages/**"
+  - "طراحی گرافیکی، رنگ، فونت یا فایل Figma/تصویر"
+  - "تصمیم‌گیری نهایی درباره مواردی که در OPEN_PRODUCT_QUESTIONS.md «ترتیب دقیق صفحات و تأیید طرح UX» را باز گذاشته؛ این سند فقط پیشنهاد است"
+  - "تغییر مستقیم docs/ai/product/** یا docs/ai/architecture/**"
+
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/product/PRODUCT_VISION.md
+  - docs/ai/product/VERSION_ONE_SCOPE.md
+  - docs/ai/product/CAMPAIGN_LIFECYCLE.md
+  - docs/ai/product/TEAM_INBOX.md
+  - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+  - docs/ai/product/BILLING_AND_CREDITS.md
+  - docs/ai/product/OPEN_PRODUCT_QUESTIONS.md
+  - docs/ai/tasks/TASK-0003/DRAFT_ROLES_MATRIX.md
+
+allowed_paths:
+  - "docs/ai/tasks/TASK-0004/DRAFT_UX_FLOWS_AND_PAGES.md"
+
+blocked_paths:
+  - "apps/**"
+  - "services/**"
+  - "packages/**"
+  - "migrations/**"
+  - "infrastructure/**"
+  - "docs/ai/product/**"
+  - "docs/ai/architecture/**"
+  - "docs/ai/governance/**"
+  - "docs/ai/decisions/**"
+  - ".env*"
+
+change_budget:
+  max_files_changed: 1
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+
+acceptance_criteria:
+  - id: AC-01
+    statement: "حداقل پنج جریان اصلی کاربری فهرست‌شده در objective، هرکدام به‌صورت گام‌به‌گام (ورودی کاربر → نتیجه سیستم) نوشته شده."
+    verification: "بررسی مدیر."
+  - id: AC-02
+    statement: "جدول نقشه صفحات شامل نام صفحه، هدف یک‌جمله‌ای و نقش(های) مجاز دسترسی است و با TASK-0003/DRAFT_ROLES_MATRIX.md (اگر آمادهٔ بازبینی شده بود) ناسازگار نیست؛ در غیر این صورت ناسازگاری را یادداشت می‌کند، نه نادیده می‌گیرد."
+    verification: "بررسی مدیر."
+  - id: AC-03
+    statement: "اصل «کاربر عادی با Session/Worker/Queue/UUID درگیر نمی‌شود» از PRODUCT_VISION.md در توصیف جریان‌ها رعایت شده."
+    verification: "بررسی متن."
+  - id: AC-04
+    statement: "هرجا ترتیب یا جزئیات صفحه در OPEN_PRODUCT_QUESTIONS.md باز بود، به‌صراحت «پیشنهادی، نیازمند تأیید مالک» علامت خورده."
+    verification: "تطبیق متن."
+
+required_tests:
+  - "بررسی دستی مدیر: تطبیق جریان‌ها با CAMPAIGN_LIFECYCLE.md و TEAM_INBOX.md"
+
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+
+documents_to_update:
+  - note: >
+      پس از تأیید بازبین، مدیر محتوای نهایی را به یک سند جدید در
+      docs/ai/product/UX_FLOWS_AND_PAGES.md منتقل می‌کند؛ این فایل در
+      محدوده همین Task ساخته یا تغییر داده نمی‌شود.
+
+stop_conditions:
+  - "نیاز به فایل خارج از allowed_paths"
+  - "ابهام در تصمیم محصول که در اسناد موجود پاسخ ندارد"
+  - "مشاهده Secret یا داده واقعی در خروجی"
+  - "تناقض آشکار با DRAFT_ROLES_MATRIX.md یا CAMPAIGN_LIFECYCLE.md که خودش نتواند حل کند"
+
+manager_approval:
+  verdict: PENDING
+  approved_at: null
+  approval_note: >
+    آماده‌سازی زودهنگام طبق docs/ai/governance/AUTONOMOUS_ANALYSIS_GOAL.md
+    (سقف سه مأموریت هم‌زمان: TASK-0001..0003 فعلاً در حال اجرا هستند).
+    این Task پس از بسته‌شدن یکی از آن سه، تأیید و واگذار می‌شود.

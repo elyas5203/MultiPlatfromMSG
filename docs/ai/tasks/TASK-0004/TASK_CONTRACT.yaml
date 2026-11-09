@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0004
 title: "پیش‌نویس جریان‌های اصلی UX و نقشه صفحات فارسی/RTL"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-15
 reviewer: chatgpt
@@ -106,3 +106,10 @@ manager_approval:
     TASK-0002 و TASK-0003 گزارش تکمیل اجرا دادند و از سقف سه مأموریت
     هم‌زمان ظرفیت آزاد شد؛ TASK-0001 هنوز نزد antigraviti-14 در حال
     اجراست. این Task به antigraviti-15 واگذار می‌شود.
+
+final_verdict:
+  verdict: APPROVED
+  reviewed_commit: 2069778
+  reviewed_by: chatgpt
+  closed_at: "2026-11-09"
+  note: "چهار ایراد UX-01 تا UX-04 رفع شد؛ موارد پیشنهادی همچنان نیازمند تأیید مالک هستند."

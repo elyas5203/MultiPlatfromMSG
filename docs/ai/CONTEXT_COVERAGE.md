@@ -37,7 +37,7 @@ version: 1.0.0
 
 - قراردادهای تحلیلی API، Webhook، گفتینو و پیامک → `docs/ai/tasks/TASK-0010/INTEGRATION_CONTRACTS_ANALYSIS.md` (`TASK-0010`, CLOSED)؛ جزئیات اجرایی و توان واقعی سرویس‌ها باز است.
 
-- تحلیل و رفع ناسازگاری مالکیت موجودیت پیام → `docs/ai/tasks/TASK-0009/MESSAGE_OWNERSHIP_ANALYSIS.md` (`TASK-0009`, CLOSED)؛ پوشش یافته F-01 ممیزی اسناد با مقایسه متوازن ماژول دهم مستقل یا زیردامنه Team Inbox.
+- تحلیل مالکیت موجودیت پیام → `docs/ai/tasks/TASK-0009/MESSAGE_OWNERSHIP_ANALYSIS.md` (`TASK-0009`, CLOSED)؛ مدیر گزینه ماژول دهم مستقل را برای مالک واحد `Message` برگزید و `MODULE_MAP.md`، `DATA_MODEL.md` و `DEVELOPMENT_PHASES.md` را هماهنگ کرد. این اصلاح اسناد مادر در انتظار بازبینی مستقل است.
 
 - ممیزی پوشش ۱۲ هدف و تناقض اسناد → `docs/ai/tasks/TASK-0008/CONSISTENCY_AUDIT.md` (`TASK-0008`, CLOSED)؛ این ممیزی پایان فاز تحلیل یا مجوز کدنویسی نیست.
 

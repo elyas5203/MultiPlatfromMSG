@@ -138,6 +138,14 @@ export class InMemoryTenantScopeRepository {
   }
 
   /**
+   * Alias for clearTenant: clears records strictly within the boundary of the specified tenant.
+   * Cross-tenant wipe without tenantId is strictly prohibited.
+   */
+  clear(tenantId: unknown): void {
+    this.clearTenant(tenantId);
+  }
+
+  /**
    * Clears records strictly within the boundary of a specific tenant.
    * Cross-tenant wipe is strictly prohibited by architectural governance.
    */

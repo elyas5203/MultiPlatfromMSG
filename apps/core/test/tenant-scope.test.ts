@@ -163,6 +163,15 @@ describe('Tenant Scope In-Memory Repository & Boundary Verification', () => {
         () => repository.clearTenant(null),
         (err: unknown) => err instanceof TenantScopeMissingError,
       );
+
+      // clear alias also enforces tenant boundary
+      repository.save(TENANT_ALPHA, 'doc-a3', { label: 'A3' });
+      repository.clear(TENANT_ALPHA);
+      assert.strictEqual(repository.countByTenant(TENANT_ALPHA), 0);
+      assert.throws(
+        () => repository.clear(null),
+        (err: unknown) => err instanceof TenantScopeMissingError,
+      );
     });
   });
 

@@ -6,7 +6,7 @@
     "scripts":  {
                     "postinstall":  "prisma generate",
                     "build":  "tsc",
-                    "test":  "node --test dist/test/tenant-scope.test.js dist/test/tenant-db-isolation.test.js"
+                    "test":  "node --test dist/test/tenant-scope.test.js dist/test/tenant-db-isolation.test.js dist/test/secret-crypto.test.js"
                 },
     "dependencies":  {
                          "@nestjs/common":  "10.4.15",

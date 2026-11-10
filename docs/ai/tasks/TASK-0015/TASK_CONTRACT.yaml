@@ -5,7 +5,7 @@ contract_revision: 1
 status: APPROVED_FOR_IMPLEMENTATION
 owner: ai_manager
 implementer: antigraviti-elyas
-reviewer: mausbot_manager_interim
+reviewer: antigraviti-15
 branch: task/TASK-0015-password-auth
 base_commit: main (پس از ثبت این قرارداد)
 worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0015

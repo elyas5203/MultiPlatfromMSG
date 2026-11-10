@@ -4,11 +4,11 @@ title: "فاز ۲ الف — ماژول مستقل خواندن و پاکساز�
 contract_revision: 1
 status: APPROVED_FOR_IMPLEMENTATION
 owner: ai_manager
-implementer: antigraviti-elyas
-reviewer: mausbot_manager_interim
+implementer: antigraviti-9
+reviewer: antigraviti-15
 branch: task/TASK-0017-contacts-csv-import
 base_commit: main (پس از ثبت این قرارداد)
-worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0017
+worktree: E:/projects/MultiPlatformMsg-agents/antigravity-9-task-0017
 
 objective: >
   یک کتابخانه خالص (بدون پایگاه داده، بدون Endpoint، بدون dependency جدید) در

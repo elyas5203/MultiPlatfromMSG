@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0025
 title: "فاز ۲ د — پایپلاین یکپارچه واردسازی گروهی مخاطبان از CSV به دیتابیس با انصراف و گزارش"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: completed
 owner: ai_manager
 implementer: antigraviti-9
 reviewer: chatgpt

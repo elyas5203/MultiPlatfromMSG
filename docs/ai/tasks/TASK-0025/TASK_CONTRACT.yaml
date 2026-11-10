@@ -1,0 +1,74 @@
+schema_version: 1
+task_id: TASK-0025
+title: "فاز ۲ د — پایپلاین یکپارچه واردسازی گروهی مخاطبان از CSV به دیتابیس با انصراف و گزارش"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-9
+reviewer: chatgpt
+branch: task/TASK-0025-contacts-csv-pipeline
+base_commit: main
+worktree: E:/projects/MultiPlatformMsg-agents/antigraviti-9-task-0025
+
+objective: >
+  اتصال ماژول جریانی ContactsImporter (از TASK-0017) به ContactsRepository (از TASK-0020)
+  در قالبی یکپارچه تحت عنوان ContactsCsvPipelineService در apps/core/src/contacts-import
+  جهت واردسازی گروهی (بسته‌های قابل تنظیم ۱۰۰۰ تایی)، بررسی بلادرنگ فهرست انصراف (Suppression)،
+  انتساب برچسب پیش‌فرض سازمان، و بازگرداندن گزارش آماری دقیق و تمیز.
+business_reason: "امکان پردازش و ذخیره امن فایل‌های مخاطبان با کارایی بالا و رعایت لیست سیاه بدون فشار حافظه."
+out_of_scope:
+  - "تغییر کنترلرهای احراز هویت یا وب سوکت"
+  - "تغییر package.json"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+allowed_paths:
+  - "apps/core/src/contacts-import/pipeline.service.ts"
+  - "apps/core/src/contacts-import/index.ts"
+  - "apps/core/test/contacts-csv-pipeline.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/prisma/**"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/billing/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "**/.env"
+change_budget:
+  max_files_changed: 4
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "پیاده‌سازی متد importStreamIntoRepository با پشتیبانی از استریم خواندنی CSV، تزریق اجباری tenant_id، دسته‌بندی عملیات درج در دسته‌های بچینگ (Batch Size)، و جلوگیری از تداخل حافظه‌ای."
+    verification: "آزمون واحد جریانی و اعتبارسنجی کارایی."
+  - id: AC-02
+    statement: "پشتیبانی از فهرست انصراف: شناسایی شماره‌های موجود در suppression_entries و علامت‌گذاری آن‌ها در گزارش یا نادیده‌گرفتن درج مطابق سیاست پیکربندی‌شده."
+    verification: "آزمون سناریو با لیست انصراف موجود."
+  - id: AC-03
+    statement: "بازگرداندن گزارش ساختاریافته شامل: totalRows, processedRows, importedCount, duplicateSkippedCount, suppressedCount, invalidCount, errors بدون افشای شماره‌های کامل در لاگ."
+    verification: "آزمون گزارش‌گیری و بررسی خروجی."
+required_tests:
+  - "npm run build"
+  - "node --test dist/test/contacts-csv-pipeline.test.js با exit 0"
+  - "git diff --check و کنترل محدوده فایل‌ها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از تحویل، مدیر وضعیت را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به تغییر فایل‌های خارج از allowed_paths"
+  - "ناتوانی در اجرای آزمون‌ها"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-10"
+  approval_note: "موج ۲ - پایپلاین یکپارچه جریانی واردسازی مخاطبان CSV به دیتابیس."

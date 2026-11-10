@@ -2,13 +2,13 @@
 doc_id: DOC-STATE-CURRENT
 owner_domain: governance
 status: active
-version: 1.4.0
+version: 1.5.0
 last_verified_commit: HEAD
 ---
 
 # وضعیت جاری پروژه
 
-**مرحله:** توسعه پرسرعت موازی فاز ۱، فاز ۲ و فاز ۳. TASK-0012 تا TASK-0021 همگی با موفقیت کامل پیاده‌سازی، آزموده و در `main` ادغام شدند. تمام معیارهای اسکلت مرکزی، احراز هویت، کانتکست سازمان، ماتریس دسترسی RBAC، مدل‌های مخاطبان و موتور دفترکل مالی محقق شدند.
+**مرحله:** توسعه پرسرعت موازی فاز ۱، فاز ۲ و فاز ۳. TASK-0012 تا TASK-0021 همگی با موفقیت کامل پیاده‌سازی، آزموده و در `main` ادغام شدند. بسته جدید مأموریت‌های موازی (TASK-0022 تا TASK-0025) فعال و آماده تخصیص به بات‌های مجری است.
 
 ## وضعیت فعلی
 
@@ -31,9 +31,11 @@ last_verified_commit: HEAD
 - **TASK-0020 (مدل داده، مایگریشن مخاطبان، برچسب‌ها و فهرست انصراف):** مجری `antigraviti-elyas`. ادغام شد (`8bcf41d`).
 - **TASK-0021 (موتور محاسباتی دفترکل غیرقابل‌تغییر مالی و رزرو اعتبار BigInt):** مجری `antigraviti-9`. ادغام شد (`45771ee`).
 
-## بسته مأموریت‌های بعدی پیشنهادی:
+## مأموریت‌های هم‌زمان جاری (۴ تسک موازی):
 
-1. **TASK-0022 (سیاست‌های سطح سطر PostgreSQL RLS):** فعال‌سازی Row-Level Security در سطح پایگاه داده برای جداول سازمانی و مخاطبان.
-2. **TASK-0023 (اندپوینت‌های مدیریت مخاطبان و برچسب‌ها):** کنترلر و سرویس CRUD مخاطبان، اعمال گارد RBAC و تزریق خودکار `tenant_id`.
-3. **TASK-0024 (جدول پایگاه داده دفترکل و تراکنش‌های مالی Prisma):** مدل داده PostgreSQL و انطباق با موتور محاسباتی `LedgerEngine`.
-4. **TASK-0025 (پایپلاین یکپارچه واردسازی مخاطبان از CSV به دیتابیس):** اتصال `ContactsImporter` جریانی به `ContactsRepository` با بررسی انصراف و کانتکست سازمان.
+| شناسه | عنوان | مجری | شاخه مستقل | حوزه مجاز |
+|---|---|---|---|---|
+| **TASK-0022** | کنترلر و اندپوینت‌های مدیریت مخاطبان و برچسب‌ها با RBAC و کانتکست | `antigraviti-14` | `task/TASK-0022-contacts-endpoints` | `apps/core/src/contacts/**`, `apps/core/test/contacts-api.test.ts` |
+| **TASK-0023** | سیاست‌های امنیت سطح سطر PostgreSQL (Row-Level Security) | `antigraviti-15` | `task/TASK-0023-postgres-rls` | `apps/core/prisma/migrations/**`, `apps/core/src/tenant/rls.service.ts` |
+| **TASK-0024** | مدل داده و مایگریشن پایگاه داده دفترکل مالی در PostgreSQL | `antigraviti-elyas` | `task/TASK-0024-billing-ledger-schema` | `apps/core/prisma/**`, `apps/core/src/billing/**` |
+| **TASK-0025** | پایپلاین یکپارچه واردسازی گروهی مخاطبان از CSV به دیتابیس با انصراف | `antigraviti-9` | `task/TASK-0025-contacts-csv-pipeline` | `apps/core/src/contacts-import/**` |

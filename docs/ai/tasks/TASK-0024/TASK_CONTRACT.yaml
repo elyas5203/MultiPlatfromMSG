@@ -1,0 +1,75 @@
+schema_version: 1
+task_id: TASK-0024
+title: "فاز ۳ ب — مدل داده و مایگریشن پایگاه داده دفترکل مالی در PostgreSQL"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-elyas
+reviewer: chatgpt
+branch: task/TASK-0024-billing-ledger-schema
+base_commit: main
+worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0024
+
+objective: >
+  پیاده‌سازی مدل‌های پایگاه داده برای حساب‌ها (accounts)، رکوردهای دفترکل دوطرفه تغییرناپذیر (ledger_entries)،
+  و رزروهای موقت (credit_reservations) در schema.prisma و مایگریشن PostgreSQL، همراه با کلاس مخزن داده
+  BillingRepository برای ذخیره و بازیابی اتمیک دفترکل منطبق بر موتور محاسباتی TASK-0021.
+business_reason: "ذخیره‌سازی پایدار و غیرقابل‌دستکاری تراکنش‌های مالی و اعتباری با کلید خارجی مرکب و تضمین عدم نشت مانده."
+out_of_scope:
+  - "تغییر کنترلرهای وب یا درگاه‌های پرداخت"
+  - "تغییر package.json"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/product/BILLING_AND_CREDITS.md
+allowed_paths:
+  - "apps/core/prisma/schema.prisma"
+  - "apps/core/prisma/migrations/20261110190000_billing_ledger_schema/**"
+  - "apps/core/src/billing/billing.repository.ts"
+  - "apps/core/src/billing/index.ts"
+  - "apps/core/test/billing-db.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/contacts/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "**/.env"
+change_budget:
+  max_files_changed: 6
+  max_added_dependencies: 0
+  database_change_allowed: true
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "افزودن مدل‌های Account، LedgerEntry و CreditReservation به schema.prisma با ستون اجباری tenant_id، کلیدهای خارجی مرکب، و مقادیر BigInt برای مبالغ."
+    verification: "اعتبارسنجی Prisma validate و migrate deploy روی دیتابیس تمیز با توکن ایمنی."
+  - id: AC-02
+    statement: "پیاده‌سازی کلاس BillingRepository با متدهای ایجاد حساب، درج رکوردهای دفترکل فقط‌افزودنی (Append-only)، ایجاد و تسویه رزرو در قالب تراکنش اتمیک دیتابیس با اعتبارسنجی اجباری tenant_id."
+    verification: "آزمون‌های تراکنش، یکپارچگی دوطرفه و انطباق با LedgerCalculator."
+  - id: AC-03
+    statement: "اثبات ایزولاسیون کامل حساب‌ها و دفترکل بین دو سازمان مجزا (عدم امکان دسترسی یا انتساب تراکنش میانسازمانی)."
+    verification: "آزمون‌های چندسازمانی دیتابیس با خطای صریح در تلاش‌های غیرمجاز."
+required_tests:
+  - "npm run build"
+  - "node --test dist/test/billing-db.test.js با exit 0"
+  - "git diff --check و کنترل محدوده فایل‌ها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از تحویل، مدیر وضعیت را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به تغییر فایل‌های خارج از allowed_paths"
+  - "ناتوانی در اجرای آزمون‌ها"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-10"
+  approval_note: "موج ۲ - مدل داده و مخزن پایگاه داده دفترکل مالی."

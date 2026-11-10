@@ -4,10 +4,11 @@ import { InMemoryTenantScopeRepository } from './tenant/tenant-scope';
 import { TenantRepository } from './tenant/tenant.repository';
 import { AuthModule } from './auth/auth.module';
 import { ContactsModule } from './contacts/contacts.module';
+import { BillingModule } from './billing/billing.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, ContactsModule],
+  imports: [DatabaseModule, AuthModule, ContactsModule, BillingModule],
   controllers: [],
   providers: [InMemoryTenantScopeRepository, TenantRepository],
   exports: [
@@ -16,6 +17,7 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
     DatabaseModule,
     AuthModule,
     ContactsModule,
+    BillingModule,
   ],
 })
 export class AppModule implements NestModule {

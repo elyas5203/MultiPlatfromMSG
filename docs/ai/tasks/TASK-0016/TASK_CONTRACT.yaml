@@ -2,13 +2,15 @@ schema_version: 1
 task_id: TASK-0016
 title: "فاز ۱ ث — حلقه کلید نسخه‌دار و چرخش کلید رمزنگاری Secret"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-14
 reviewer: antigraviti-15
 branch: task/TASK-0016-key-ring
 base_commit: main (پس از ثبت این قرارداد)
 worktree: E:/projects/MultiPlatformMsg-agents/antigravity-14-task-0016
+merged_commit: 30b31ce97a897f3be35216831b8442bfe6868cf5
+merged_at: "2026-11-10"
 
 objective: >
   روی ابزار AES-256-GCM موجود (TASK-0014) یک حلقه کلید نسخه‌دار بساز: بارگذاری

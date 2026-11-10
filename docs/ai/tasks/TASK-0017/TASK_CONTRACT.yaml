@@ -2,13 +2,15 @@ schema_version: 1
 task_id: TASK-0017
 title: "فاز ۲ الف — ماژول مستقل خواندن و پاکسازی فایل CSV مخاطبان"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-9
 reviewer: antigraviti-15
 branch: task/TASK-0017-contacts-csv-import
 base_commit: main (پس از ثبت این قرارداد)
 worktree: E:/projects/MultiPlatformMsg-agents/antigravity-9-task-0017
+merged_commit: 00acc9f49718813f0e285f30598738803c81976f
+merged_at: "2026-11-10"
 
 objective: >
   یک کتابخانه خالص (بدون پایگاه داده، بدون Endpoint، بدون dependency جدید) در

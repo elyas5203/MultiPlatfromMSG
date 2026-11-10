@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+﻿import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 
 export class SecretCryptoError extends Error {
   constructor() {
@@ -16,6 +16,16 @@ function authenticatedContext(key: Buffer, tenantId: string, purpose: string): B
     throw new SecretCryptoError();
   }
   return Buffer.from(JSON.stringify(['secret-crypto', 'v1', tenantId, purpose]), 'utf8');
+}
+
+function authenticatedContextV2(key: Buffer, keyId: string, tenantId: string, purpose: string): Buffer {
+  if (!Buffer.isBuffer(key) || key.length !== 32 ||
+      typeof keyId !== 'string' || keyId.trim() !== keyId || !/^[a-zA-Z0-9_-]{1,64}$/.test(keyId) ||
+      typeof tenantId !== 'string' || tenantId.trim() !== tenantId || !/^[a-zA-Z0-9_-]{1,64}$/.test(tenantId) ||
+      typeof purpose !== 'string' || purpose.trim() !== purpose || !/^[a-zA-Z0-9_.:-]{1,128}$/.test(purpose)) {
+    throw new SecretCryptoError();
+  }
+  return Buffer.from(JSON.stringify(['secret-crypto', 'v2', keyId, tenantId, purpose]), 'utf8');
 }
 
 function decodeHex(value: string, bytes?: number): Buffer {
@@ -53,6 +63,42 @@ export function decryptSecret(envelope: string, key: Buffer, tenantId: string, p
     const nonce = decodeHex(parts[1], 12);
     const tag = decodeHex(parts[2], 16);
     const ciphertext = decodeHex(parts[3]);
+    const decipher = createDecipheriv('aes-256-gcm', key, nonce, { authTagLength: 16 });
+    decipher.setAAD(aad);
+    decipher.setAuthTag(tag);
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  } catch {
+    throw new SecretCryptoError();
+  }
+}
+
+/** Version 2 envelope: v2.<keyId>.<12-byte nonce hex>.<16-byte tag hex>.<ciphertext hex>.
+ * Binds keyId, tenantId, and purpose to the GCM authenticated additional data (AAD).
+ */
+export function encryptSecretV2(plaintext: Buffer, key: Buffer, keyId: string, tenantId: string, purpose: string): string {
+  try {
+    const aad = authenticatedContextV2(key, keyId, tenantId, purpose);
+    if (!Buffer.isBuffer(plaintext)) throw new SecretCryptoError();
+    const nonce = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', key, nonce, { authTagLength: 16 });
+    cipher.setAAD(aad);
+    const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    return ['v2', keyId, nonce.toString('hex'), cipher.getAuthTag().toString('hex'), ciphertext.toString('hex')].join('.');
+  } catch {
+    throw new SecretCryptoError();
+  }
+}
+
+/** Returns plaintext only after GCM authentication succeeds with the expected keyId in AAD. */
+export function decryptSecretV2(envelope: string, key: Buffer, expectedKeyId: string, tenantId: string, purpose: string): Buffer {
+  try {
+    const aad = authenticatedContextV2(key, expectedKeyId, tenantId, purpose);
+    if (typeof envelope !== 'string') throw new SecretCryptoError();
+    const parts = envelope.split('.');
+    if (parts.length !== 5 || parts[0] !== 'v2' || parts[1] !== expectedKeyId) throw new SecretCryptoError();
+    const nonce = decodeHex(parts[2], 12);
+    const tag = decodeHex(parts[3], 16);
+    const ciphertext = decodeHex(parts[4]);
     const decipher = createDecipheriv('aes-256-gcm', key, nonce, { authTagLength: 16 });
     decipher.setAAD(aad);
     decipher.setAuthTag(tag);

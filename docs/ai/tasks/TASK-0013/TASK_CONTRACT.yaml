@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0013
 title: "فاز ۱ ب — پایگاه داده واقعی PostgreSQL، موجودیت‌های پایه سازمان و اجرای اجباری tenant_id در لایه داده"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-15
 reviewer: chatgpt

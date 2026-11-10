@@ -1,0 +1,82 @@
+schema_version: 1
+task_id: TASK-0014
+title: "فاز ۱ پ — ابزار مستقل رمزنگاری Secret با AES-256-GCM"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-15
+reviewer: chatgpt
+
+objective: >
+  یک ابزار کوچک و بدون ذخیره‌سازی برای رمزگذاری و بازیابی Secret با AES-256-GCM
+  در apps/core بساز که کلید ۳۲ بایتی را از فراخواننده بگیرد، برای هر رمزگذاری
+  nonce تصادفی بسازد و شناسه سازمان و کاربرد Secret را به داده احراز اصالت ببندد.
+business_reason: >
+  فاز ۱ در DEVELOPMENT_PHASES.md ابزار رمزنگاری Secret را لازم می‌داند؛ این
+  برش مستقل از تصمیم باز مالک درباره OTP یا گذرواژه است.
+out_of_scope:
+  - "ذخیره‌سازی، چرخش، تولید یا توزیع کلید در محیط واقعی"
+  - "اتصال به دیتابیس، فرستنده، حساب، Endpoint، احراز هویت یا RBAC"
+  - "Secret واقعی، credential واقعی، داده مشتری یا لاگ مقدار محرمانه"
+  - "تغییر schema، migration، API عمومی یا استقرار"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/product/DEVELOPMENT_PHASES.md
+  - docs/ai/architecture/TECH_STACK.md
+  - docs/ai/tasks/TASK-0013/IMPLEMENTATION_REPORT.md
+  - docs/ai/tasks/TASK-0013/REVIEW_REPORT.md
+allowed_paths:
+  - "apps/core/src/security/secret-crypto.ts"
+  - "apps/core/test/secret-crypto.test.ts"
+  - "apps/core/package.json"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/prisma/**"
+  - "apps/core/package-lock.json"
+  - "apps/core/.env"
+  - "**/.env"
+change_budget:
+  max_files_changed: 3
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "رمزگذاری و بازیابی با کلید ۳۲ بایتی معتبر درست است؛ دو بار رمزگذاری یک متن، خروجی متفاوت دارد. قالب خروجی نسخه‌دار است."
+    verification: "تست round-trip، تفاوت nonce/output و تشخیص نسخه قالب."
+  - id: AC-02
+    statement: "بازیابی با tenant_id، کاربرد Secret یا کلید متفاوت رد می‌شود. tenant_id و کاربرد خالی یا نامعتبر پذیرفته نمی‌شوند."
+    verification: "تست جداسازی سازمان و کاربرد و اعتبارسنجی ورودی."
+  - id: AC-03
+    statement: "دستکاری ciphertext، nonce یا authentication tag و قالب خراب رد می‌شود؛ خطا و خروجی هیچ Secret، کلید یا متن اصلی را افشا نمی‌کند."
+    verification: "تست tampering و بازرسی کد برای نبود چاپ داده حساس."
+  - id: AC-04
+    statement: "هیچ dependency، schema، endpoint یا مسیر خارج از قرارداد تغییر نمی‌کند؛ تست تازه در دستور npm test قرار می‌گیرد."
+    verification: "git diff --check، کنترل فایل‌ها، npm ci، npm run build و npm test با کد خروج واقعی."
+required_tests:
+  - "آزمون واحد تمام حالت‌های AC-01 تا AC-03 با داده و کلید ساختگی"
+  - "npm ci و npm run build در apps/core"
+  - "npm test کامل، شامل آزمون‌های PostgreSQL موجود، روی نمونه تست مستقل مجری با نشانگر ایمنی و exit code صفر"
+  - "git diff --check و کنترل allowed_paths/blocked_paths"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از رأی مستقل، مدیر گزارش‌های TASK-0014 و وضعیت پروژه را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به Secret یا کلید واقعی، تغییر schema، dependency یا فایل خارج از allowed_paths"
+  - "ابهام در قرارداد داده یا رفتار رمزنگاری که در محدوده کوچک حل نشود"
+  - "ناتوانی در اجرای تست اجباری یا مشاهده داده محرمانه"
+  - "نیاز به تصمیم روش ورود، اعمال RBAC یا اتصال به حساب واقعی"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-10"
+  approval_note: "پیشروی مرحله‌ای مالک برای فاز ۱ قبلاً ثبت شده است؛ این مأموریت هیچ Gate تصمیم مالک را باز نمی‌کند."

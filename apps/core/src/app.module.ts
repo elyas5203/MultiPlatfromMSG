@@ -6,10 +6,18 @@ import { AuthModule } from './auth/auth.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { BillingModule } from './billing/billing.module';
 import { MessagingModule } from './messaging/messaging.module';
+import { CampaignModule } from './campaigns/campaign.module';
 import { TenantMiddleware } from './tenant/tenant.middleware';
 
 @Module({
-  imports: [DatabaseModule, AuthModule, ContactsModule, BillingModule, MessagingModule],
+  imports: [
+    DatabaseModule,
+    AuthModule,
+    ContactsModule,
+    BillingModule,
+    MessagingModule,
+    CampaignModule,
+  ],
   controllers: [],
   providers: [InMemoryTenantScopeRepository, TenantRepository],
   exports: [
@@ -20,6 +28,7 @@ import { TenantMiddleware } from './tenant/tenant.middleware';
     ContactsModule,
     BillingModule,
     MessagingModule,
+    CampaignModule,
   ],
 })
 export class AppModule implements NestModule {

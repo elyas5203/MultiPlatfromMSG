@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0019
 title: "فاز ۱ چ — گارد کنترل دسترسی مبتنی بر نقش (RBAC Guards & Roles Matrix)"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: completed
 owner: ai_manager
 implementer: antigraviti-15
 reviewer: chatgpt

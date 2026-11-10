@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0018
 title: "فاز ۱ ج — تزریق و اعتبارسنجی اجباری کانتکست چندسازمانی (Tenant Context & Middleware)"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: completed
 owner: ai_manager
 implementer: antigraviti-14
 reviewer: chatgpt

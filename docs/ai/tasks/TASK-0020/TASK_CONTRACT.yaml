@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0020
 title: "فاز ۲ ب — مدل داده و مایگریشن مخاطبان، برچسب‌ها و فهرست انصراف در PostgreSQL"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: completed
 owner: ai_manager
 implementer: antigraviti-elyas
 reviewer: chatgpt

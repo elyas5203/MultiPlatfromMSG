@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0021
 title: "فاز ۳ الف — موتور محاسباتی دفترکل غیرقابل‌تغییر مالی و رزرو اعتبار (Billing Ledger Math Engine)"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: completed
 owner: ai_manager
 implementer: antigraviti-9
 reviewer: chatgpt

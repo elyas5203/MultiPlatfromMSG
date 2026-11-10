@@ -21,6 +21,7 @@ export interface SenderAccount {
   readonly dailyQuota: number;
   readonly sentTodayCount: number;
   readonly activeWorkloadCount: number;
+  readonly sessionEncrypted?: string | null;
   readonly cooldownUntil?: Date | null;
   readonly cooldownReason?: string | null;
   readonly lastUsedAt?: Date | null;
@@ -129,3 +130,6 @@ export class InvalidSenderConfigError extends SenderRoutingError {
     this.name = 'InvalidSenderConfigError';
   }
 }
+
+export * from './senders.repository';
+export * from './senders.service';

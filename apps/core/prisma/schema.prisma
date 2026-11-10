@@ -23,6 +23,7 @@ model Tenant {
   tags               Tag[]
   contactTags        ContactTag[]
   suppressionEntries SuppressionEntry[]
+  senderAccounts     SenderAccount[]
 
   @@map("tenants")
 }
@@ -192,4 +193,29 @@ model SuppressionEntry {
   @@index([tenantId])
   @@index([tenantId, phoneNormalized])
   @@map("suppression_entries")
+}
+
+model SenderAccount {
+  id               String    @id @default(uuid())
+  tenantId         String    @map("tenant_id")
+  platform         String    @map("platform")
+  ownershipType    String    @default("CUSTOMER_CONNECTED") @map("ownership_type")
+  status           String    @default("ACTIVE") @map("status")
+  dailyQuota       Int       @default(50) @map("daily_quota")
+  sentTodayCount   Int       @default(0) @map("sent_today_count")
+  sessionEncrypted String?   @map("session_encrypted")
+  name             String?   @map("name")
+  cooldownUntil    DateTime? @map("cooldown_until")
+  cooldownReason   String?   @map("cooldown_reason")
+  metadata         Json?     @map("metadata")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+  @@index([tenantId, platform])
+  @@index([tenantId, status])
+  @@map("sender_accounts")
 }

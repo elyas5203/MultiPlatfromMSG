@@ -1,29 +1,21 @@
 schema_version: 1
 task_id: TASK-0028
-title: "فاز ۴ ب — هسته منطق توقف اضطراری (Kill Switch Core) و صف‌های ناهمگام پیام"
-contract_revision: 2
-status: APPROVED_FOR_IMPLEMENTATION
+title: "فاز ۵.ب - هسته منطق توقف اضطراری (Kill Switch Core) و صف‌های ناهمگام پیام"
+contract_revision: 3
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-9
 reviewer: chatgpt
 branch: task/TASK-0028-kill-switch-core
 base_commit: main
-worktree: E:/projects/MultiPlatformMsg-agents/antigravity-9-task-0028
+merged_commit: af787ce
+tests_passed: 17/17
 
 objective: >
   پیاده‌سازی هسته توقف اضطراری (KillSwitchService) در apps/core/src/messaging
-  شامل ۳ رفتار ایمن: ۱) توقف پذیرش جدید (New Admissions)، ۲) مدیریت کارهای در حال پردازش (In-Flight Tasks)،
-  ۳) تعلیق مصرف صفوف (Pending Queues)، به همراه قرارداد و تعاریف رویدادهای صف پیام در RabbitMQ.
-business_reason: "تضمین توقف فوری و بدون بازگشت هرگونه ارسال پیام در شرایط اضطراری قبل از فعال‌سازی کانکتورها در فاز ۵."
-out_of_scope:
-  - "اتصال کانکتور به تلگرام یا بله (در فاز ۵)"
-  - "تغییر package.json"
-must_read:
-  - docs/ai/START_HERE.md
-  - docs/ai/CURRENT_STATE.md
-  - docs/ai/MASTER_EXECUTION_LEDGER.md
-  - docs/ai/product/DEVELOPMENT_PHASES.md
-  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  شامل ۳ رفتار کلیدی: ۱) توقف پذیرش پیام (New Admissions)، ۲) مدیریت وظایف در حال پردازش (In-Flight Tasks)،
+  ۳) تعلیق صفوف معلق (Pending Queues)، به همراه رویدادها و انطباق ساختار صفی با RabbitMQ.
+business_reason: "تضمین امنیت جانی و مالی سیستم هنگام اسپم، حملات یا دستور توقف اضطراری قبل از ارسال‌های فیزیکی در فاز ۶."
 allowed_paths:
   - "apps/core/src/messaging/kill-switch.service.ts"
   - "apps/core/src/messaging/queue.types.ts"

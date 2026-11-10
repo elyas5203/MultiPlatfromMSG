@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0029
 title: "فاز ۴ ج — الگوریتم مسیریابی پیام و انتخاب خودکار حساب فرستنده"
 contract_revision: 1
-status: DRAFT
+status: APPROVED_FOR_IMPLEMENTATION
 owner: ai_manager
 implementer: antigraviti-9
 reviewer: chatgpt
@@ -68,6 +68,6 @@ documents_to_update:
 stop_conditions:
   - "نیاز به تغییر فایل‌های خارج از allowed_paths"
 manager_approval:
-  verdict: PENDING
-  approved_at: ""
+  verdict: APPROVED
+  approved_at: "2026-11-10"
   approval_note: "موج ۳ - موتور هوشمند مسیریابی و انتخاب فرستنده."

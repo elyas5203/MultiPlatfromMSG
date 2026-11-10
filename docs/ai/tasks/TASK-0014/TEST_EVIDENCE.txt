@@ -1,0 +1,467 @@
+گزارش اجرای تازه TASK-0014؛ مقادیر اتصال و نشانگر محرمانه درج نشده‌اند.
+UTC: 2026-11-10T02:53:08.7144101Z
+Repository: E:/projects/MultiPlatformMsg-agents/antigravity-15
+Expected SHA: 2b6603ec461de14479a350dd27e8871b08f58e22
+
+[Exact revision] UTC: 2026-11-10T02:53:08.7144101Z
+COMMAND: git rev-parse HEAD
+2b6603ec461de14479a350dd27e8871b08f58e22
+EXIT CODE: 0
+
+[Tracked tree unchanged before verification] UTC: 2026-11-10T02:53:08.8144199Z
+COMMAND: git diff HEAD --exit-code
+
+EXIT CODE: 0
+
+[Existing untracked artifacts] UTC: 2026-11-10T02:53:08.8593313Z
+COMMAND: git status --short
+?? .postgres-portable/
+EXIT CODE: 0
+
+[PostgreSQL binary version] UTC: 2026-11-10T02:53:08.9044221Z
+COMMAND: & "$pgBin/postgres.exe" --version
+postgres (PostgreSQL) 16.6
+EXIT CODE: 0
+
+[Fresh cluster initialization; local synthetic instance without password] UTC: 2026-11-10T02:53:08.9296582Z
+COMMAND: & "$pgBin/initdb.exe" -D (Join-Path $cluster 'data') -U postgres -A trust --encoding=UTF8 --locale=C
+The files belonging to this database system will be owned by user "kingk".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "C".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+creating directory C:/Users/kingk/AppData/Local/Temp/multiplatformmsg-task0014-evidence-6b9e2811ad24436e8f45a8b4d86a7bcc/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... windows
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... Asia/Tehran
+creating configuration files ... ok
+running bootstrap script ... ok
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+Success. You can now start the database server using:
+
+    ^"E^:^\projects^\MultiPlatformMsg^-agents^\antigravity^-15^\^.postgres^-portable^\pgsql^\bin^\pg^_ctl^" -D ^"C^:^\Users^\kingk^\AppData^\Local^\Temp^\multiplatformmsg^-task0014^-evidence^-6b9e2811ad24436e8f45a8b4d86a7bcc^\data^" -l logfile start
+EXIT CODE: 0
+
+[Server start, loopback only] UTC: 2026-11-10T02:53:14.2662272Z
+COMMAND: $startOut = Join-Path $cluster 'start.stdout.txt'
+        $startErr = Join-Path $cluster 'start.stderr.txt'
+        $startArgs = @('-D', (Join-Path $cluster 'data'), '-l', (Join-Path $cluster 'postgres.log'), '-o', ('"-p ' + $port + ' -h 127.0.0.1"'), '-w', 'start')
+        $startProcess = Start-Process -FilePath "$pgBin/pg_ctl.exe" -ArgumentList $startArgs -WindowStyle Hidden -RedirectStandardOutput $startOut -RedirectStandardError $startErr -PassThru
+        $cachedHandle = $startProcess.Handle
+        $startProcess.WaitForExit()
+        $startCode = $startProcess.ExitCode
+        Get-Content -LiteralPath $startOut, $startErr
+        $global:LASTEXITCODE = $startCode
+waiting for server to start.... done
+server started
+EXIT CODE: 0
+
+[Fresh dedicated test database] UTC: 2026-11-10T02:53:14.6171723Z
+COMMAND: & "$pgBin/createdb.exe" -h 127.0.0.1 -p $port -U postgres $db
+
+EXIT CODE: 0
+
+[Dependency installation] UTC: 2026-11-10T02:53:14.8788649Z
+COMMAND: npm.cmd ci
+
+> @multiplatformmsg/core@0.1.0 postinstall
+> prisma generate
+
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to .\node_modules\@prisma\client in 65ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+
+
+added 32 packages, and audited 33 packages in 15s
+
+4 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+EXIT CODE: 0
+
+[Existing migration on fresh database] UTC: 2026-11-10T02:53:30.1603405Z
+COMMAND: npx.cmd prisma migrate deploy
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": PostgreSQL database "task0014_synthetic_test", schema "public" at "127.0.0.1:54334"
+
+1 migration found in prisma/migrations
+
+Applying migration `20261109000000_init_tenant_entities`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261109000000_init_tenant_entities/
+    └─ migration.sql
+      
+All migrations have been successfully applied.
+EXIT CODE: 0
+
+[External marker provisioning and runtime server verification] UTC: 2026-11-10T02:53:32.4824669Z
+COMMAND: @'
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+(async () => {
+  await prisma.$executeRawUnsafe('CREATE TABLE "__multiplatformmsg_test_marker__" (marker_key TEXT PRIMARY KEY, marker_token TEXT NOT NULL)');
+  await prisma.$executeRawUnsafe('INSERT INTO "__multiplatformmsg_test_marker__" (marker_key, marker_token) VALUES ($1, $2)', 'TEST_ENVIRONMENT_PERMITTED', process.env.TEST_DATABASE_MARKER_TOKEN);
+  const rows = await prisma.$queryRawUnsafe('SELECT version() AS version');
+  console.log(rows[0].version);
+  const marker = await prisma.$queryRawUnsafe('SELECT marker_key FROM "__multiplatformmsg_test_marker__" WHERE marker_token = $1', process.env.TEST_DATABASE_MARKER_TOKEN);
+  if (marker.length !== 1 || marker[0].marker_key !== 'TEST_ENVIRONMENT_PERMITTED') throw new Error('Marker verification failed');
+  console.log('External test marker provisioned and verified; token omitted.');
+})().catch(() => { console.error('Synthetic database provisioning failed.'); process.exitCode = 1; }).finally(() => prisma.$disconnect());
+'@ | node.exe
+PostgreSQL 16.6, compiled by Visual C++ build 1942, 64-bit
+External test marker provisioned and verified; token omitted.
+EXIT CODE: 0
+
+[Build] UTC: 2026-11-10T02:53:33.0160842Z
+COMMAND: npm.cmd run build
+
+> @multiplatformmsg/core@0.1.0 build
+> tsc
+EXIT CODE: 0
+
+[Full test suite, including real PostgreSQL integration] UTC: 2026-11-10T02:53:34.8631051Z
+COMMAND: npm.cmd test
+
+> @multiplatformmsg/core@0.1.0 test
+> node --test dist/test/tenant-scope.test.js dist/test/tenant-db-isolation.test.js dist/test/secret-crypto.test.js
+
+TAP version 13
+# Subtest: Standalone AES-256-GCM secret cryptography
+    # Subtest: round-trips Unicode, empty and arbitrary binary data without mutating inputs
+    ok 1 - round-trips Unicode, empty and arbitrary binary data without mutating inputs
+      ---
+      duration_ms: 4.177
+      ...
+    # Subtest: generates fresh nonces and different envelopes for repeated plaintext
+    ok 2 - generates fresh nonces and different envelopes for repeated plaintext
+      ---
+      duration_ms: 2.3294
+      ...
+    # Subtest: rejects another tenant, purpose, key and ambiguous context framing
+    ok 3 - rejects another tenant, purpose, key and ambiguous context framing
+      ---
+      duration_ms: 3.3085
+      ...
+    # Subtest: rejects invalid context and key inputs on both operations
+    ok 4 - rejects invalid context and key inputs on both operations
+      ---
+      duration_ms: 5.3395
+      ...
+    # Subtest: rejects bit changes in every nonce, tag and ciphertext byte
+    ok 5 - rejects bit changes in every nonce, tag and ciphertext byte
+      ---
+      duration_ms: 6.6412
+      ...
+    # Subtest: rejects malformed envelopes, unsupported versions and noncanonical encoding
+    ok 6 - rejects malformed envelopes, unsupported versions and noncanonical encoding
+      ---
+      duration_ms: 2.6
+      ...
+    1..6
+ok 1 - Standalone AES-256-GCM secret cryptography
+  ---
+  duration_ms: 25.9506
+  type: 'suite'
+  ...
+# Subtest: PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (AC-02)
+    # Subtest: Fail-Closed Non-Test Database Protection (Safety Guard)
+        # Subtest: must reject non-test database URLs before any database mutation occurs without leaking credentials or database names
+        ok 1 - must reject non-test database URLs before any database mutation occurs without leaking credentials or database names
+          ---
+          duration_ms: 20.4283
+          ...
+        # Subtest: must reject missing or malformed database URLs
+        ok 2 - must reject missing or malformed database URLs
+          ---
+          duration_ms: 7.8982
+          ...
+        # Subtest: must accept authorized dedicated test database names
+        ok 3 - must accept authorized dedicated test database names
+          ---
+          duration_ms: 6.6167
+          ...
+        1..3
+    ok 1 - Fail-Closed Non-Test Database Protection (Safety Guard)
+      ---
+      duration_ms: 35.7417
+      type: 'suite'
+      ...
+    # Subtest: Pre-Provisioned Safety Marker Verification (Safety Guard Negative Tests)
+        # Subtest: must reject execution when marker token is missing or empty in environment
+        ok 1 - must reject execution when marker token is missing or empty in environment
+          ---
+          duration_ms: 5.2656
+          ...
+        # Subtest: must reject execution when marker token mismatches expected value
+        ok 2 - must reject execution when marker token mismatches expected value
+          ---
+          duration_ms: 5.5485
+          ...
+        # Subtest: must reject execution when marker table is missing (simulated fail-closed query failure)
+        ok 3 - must reject execution when marker table is missing (simulated fail-closed query failure)
+          ---
+          duration_ms: 5.1195
+          ...
+        # Subtest: must reject execution when marker record does not exist in table
+        ok 4 - must reject execution when marker record does not exist in table
+          ---
+          duration_ms: 5.1352
+          ...
+        # Subtest: must ensure guard failure leaves verified flag as false and blocks data mutation or cleanup
+        ok 5 - must ensure guard failure leaves verified flag as false and blocks data mutation or cleanup
+          ---
+          duration_ms: 3.9294
+          ...
+        1..5
+    ok 2 - Pre-Provisioned Safety Marker Verification (Safety Guard Negative Tests)
+      ---
+      duration_ms: 25.4772
+      type: 'suite'
+      ...
+    # Subtest: Synthetic Two-Tenant Repository Isolation & Composite FK Integrity (AC-02)
+        # Subtest: should create and retrieve Brands with strict repository tenant filtering
+        ok 1 - should create and retrieve Brands with strict repository tenant filtering
+          ---
+          duration_ms: 11.0262
+          ...
+        # Subtest: should create and retrieve Staff records with strict repository tenant filtering
+        ok 2 - should create and retrieve Staff records with strict repository tenant filtering
+          ---
+          duration_ms: 9.1675
+          ...
+        # Subtest: should create and retrieve Teams with strict repository tenant filtering
+        ok 3 - should create and retrieve Teams with strict repository tenant filtering
+          ---
+          duration_ms: 8.9212
+          ...
+        # Subtest: should manage Staff-Team membership and prevent cross-tenant assignment at Repository layer
+        ok 4 - should manage Staff-Team membership and prevent cross-tenant assignment at Repository layer
+          ---
+          duration_ms: 15.8285
+          ...
+        # Subtest: must enforce composite foreign keys at the database level and reject cross-tenant inserts (AC-02 negative test)
+        ok 5 - must enforce composite foreign keys at the database level and reject cross-tenant inserts (AC-02 negative test)
+          ---
+          duration_ms: 9.6869
+          ...
+        # Subtest: should strictly limit clearTenant cleanup to the specified tenant
+        ok 6 - should strictly limit clearTenant cleanup to the specified tenant
+          ---
+          duration_ms: 9.9198
+          ...
+        1..6
+    ok 3 - Synthetic Two-Tenant Repository Isolation & Composite FK Integrity (AC-02)
+      ---
+      duration_ms: 65.0792
+      type: 'suite'
+      ...
+    # Subtest: Missing tenant_id Rejection (AC-02)
+        # Subtest: must reject Brand operations when tenant_id is missing or empty
+        ok 1 - must reject Brand operations when tenant_id is missing or empty
+          ---
+          duration_ms: 3.8872
+          ...
+        # Subtest: must reject Staff operations when tenant_id is missing or empty
+        ok 2 - must reject Staff operations when tenant_id is missing or empty
+          ---
+          duration_ms: 3.9218
+          ...
+        # Subtest: must reject Team operations when tenant_id is missing or empty
+        ok 3 - must reject Team operations when tenant_id is missing or empty
+          ---
+          duration_ms: 4.182
+          ...
+        # Subtest: must reject Staff-Team assignment and cleanup when tenant_id is missing
+        ok 4 - must reject Staff-Team assignment and cleanup when tenant_id is missing
+          ---
+          duration_ms: 3.9359
+          ...
+        1..4
+    ok 4 - Missing tenant_id Rejection (AC-02)
+      ---
+      duration_ms: 16.1971
+      type: 'suite'
+      ...
+    # Subtest: Invalid tenant_id Rejection (AC-02)
+        # Subtest: must reject non-string and illegal characters in tenant_id
+        ok 1 - must reject non-string and illegal characters in tenant_id
+          ---
+          duration_ms: 5.4293
+          ...
+        1..1
+    ok 5 - Invalid tenant_id Rejection (AC-02)
+      ---
+      duration_ms: 5.5847
+      type: 'suite'
+      ...
+    1..5
+ok 2 - PostgreSQL Database Multi-Tenancy Boundary & Integrity Verification (AC-02)
+  ---
+  duration_ms: 219.9872
+  type: 'suite'
+  ...
+# Subtest: Tenant Scope In-Memory Repository & Boundary Verification
+    # Subtest: Synthetic Two-Tenant Isolation (AC-02)
+        # Subtest: should save records under respective tenants and retrieve them correctly
+        ok 1 - should save records under respective tenants and retrieve them correctly
+          ---
+          duration_ms: 1.3163
+          ...
+        # Subtest: must NEVER return a record belonging to another tenant (cross-tenant leak prevention)
+        ok 2 - must NEVER return a record belonging to another tenant (cross-tenant leak prevention)
+          ---
+          duration_ms: 0.2857
+          ...
+        # Subtest: must isolate collection queries between tenants
+        ok 3 - must isolate collection queries between tenants
+          ---
+          duration_ms: 0.3082
+          ...
+        # Subtest: must prevent shared mutable references and cross-tenant mutation leak via deep copy (Regression Test)
+        ok 4 - must prevent shared mutable references and cross-tenant mutation leak via deep copy (Regression Test)
+          ---
+          duration_ms: 0.3179
+          ...
+        # Subtest: must strictly enforce tenant boundary during clearTenant operations
+        ok 5 - must strictly enforce tenant boundary during clearTenant operations
+          ---
+          duration_ms: 0.6543
+          ...
+        1..5
+    ok 1 - Synthetic Two-Tenant Isolation (AC-02)
+      ---
+      duration_ms: 3.5184
+      type: 'suite'
+      ...
+    # Subtest: Missing tenant_id Rejection (AC-02)
+        # Subtest: must reject findById operations when tenant_id is missing or empty
+        ok 1 - must reject findById operations when tenant_id is missing or empty
+          ---
+          duration_ms: 0.3525
+          ...
+        # Subtest: must reject save operations when tenant_id is missing or empty
+        ok 2 - must reject save operations when tenant_id is missing or empty
+          ---
+          duration_ms: 0.3059
+          ...
+        # Subtest: must reject collection queries when tenant_id is missing or empty
+        ok 3 - must reject collection queries when tenant_id is missing or empty
+          ---
+          duration_ms: 0.2599
+          ...
+        1..3
+    ok 2 - Missing tenant_id Rejection (AC-02)
+      ---
+      duration_ms: 1.2817
+      type: 'suite'
+      ...
+    # Subtest: Invalid tenant_id Rejection (AC-02)
+        # Subtest: must reject non-string tenant_id values
+        ok 1 - must reject non-string tenant_id values
+          ---
+          duration_ms: 0.7678
+          ...
+        # Subtest: must reject malformed or illegal characters in tenant_id
+        ok 2 - must reject malformed or illegal characters in tenant_id
+          ---
+          duration_ms: 0.5532
+          ...
+        1..2
+    ok 3 - Invalid tenant_id Rejection (AC-02)
+      ---
+      duration_ms: 1.6783
+      type: 'suite'
+      ...
+    # Subtest: NestJS Application Context & DI Integration
+        # Subtest: should successfully initialize AppModule and resolve InMemoryTenantScopeRepository
+        ok 1 - should successfully initialize AppModule and resolve InMemoryTenantScopeRepository
+          ---
+          duration_ms: 66.2148
+          ...
+        1..1
+    ok 4 - NestJS Application Context & DI Integration
+      ---
+      duration_ms: 66.434
+      type: 'suite'
+      ...
+    1..4
+ok 3 - Tenant Scope In-Memory Repository & Boundary Verification
+  ---
+  duration_ms: 73.7622
+  type: 'suite'
+  ...
+1..3
+# tests 36
+# suites 12
+# pass 36
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 593.7022
+EXIT CODE: 0
+
+[Whitespace check] UTC: 2026-11-10T02:53:35.8625509Z
+COMMAND: git diff 34c2cd27b654cd5191111eca537d9251e50a70f6 HEAD --check
+
+EXIT CODE: 0
+
+[Committed scope] UTC: 2026-11-10T02:53:35.9159344Z
+COMMAND: git diff --stat 34c2cd27b654cd5191111eca537d9251e50a70f6 HEAD
+ apps/core/package.json                  |  2 +-
+ apps/core/src/security/secret-crypto.ts | 63 +++++++++++++++++++++
+ apps/core/test/secret-crypto.test.ts    | 98 +++++++++++++++++++++++++++++++++
+ 3 files changed, 162 insertions(+), 1 deletion(-)
+EXIT CODE: 0
+
+[Tracked tree unchanged after verification] UTC: 2026-11-10T02:53:35.9660141Z
+COMMAND: git diff HEAD --exit-code
+
+EXIT CODE: 0
+
+[Exact revision after verification] UTC: 2026-11-10T02:53:36.0065430Z
+COMMAND: git rev-parse HEAD
+2b6603ec461de14479a350dd27e8871b08f58e22
+EXIT CODE: 0
+
+[Cleanup: drop only this fresh synthetic database] UTC: 2026-11-10T02:53:36.0437177Z
+COMMAND: & "$pgBin/dropdb.exe" -h 127.0.0.1 -p $port -U postgres $db
+
+EXIT CODE: 0
+
+[Cleanup: stop only this fresh cluster] UTC: 2026-11-10T02:53:36.1615212Z
+COMMAND: & "$pgBin/pg_ctl.exe" -D (Join-Path $cluster 'data') -w stop
+waiting for server to shut down.... done
+server stopped
+EXIT CODE: 0
+
+[Verify stopped server (pg_ctl status expects exit 3)] UTC: 2026-11-10T02:53:36.3312469Z
+COMMAND: & "$pgBin/pg_ctl.exe" -D (Join-Path $cluster 'data') status
+            $statusCode = $LASTEXITCODE
+            Record "Actual pg_ctl status exit: $statusCode (expected 3)"
+            if ($statusCode -eq 3) { $global:LASTEXITCODE = 0 } else { $global:LASTEXITCODE = 1 }
+Actual pg_ctl status exit: 3 (expected 3)
+pg_ctl: no server running
+Actual pg_ctl status exit: 3 (expected 3)
+EXIT CODE: 0
+FINAL RESULT: PASS; no product code was changed; fresh database removed; server stopped.

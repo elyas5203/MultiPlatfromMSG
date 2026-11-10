@@ -2,7 +2,7 @@ schema_version: 1
 task_id: TASK-0014
 title: "فاز ۱ پ — ابزار مستقل رمزنگاری Secret با AES-256-GCM"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-15
 reviewer: chatgpt

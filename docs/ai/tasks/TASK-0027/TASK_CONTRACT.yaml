@@ -1,8 +1,8 @@
 schema_version: 1
 task_id: TASK-0027
 title: "فاز ۴ الف — ماژول فرستنده‌ها و اتصال حساب‌های تلگرام/بله به تفکیک سازمان"
-contract_revision: 1
-status: DRAFT
+contract_revision: 2
+status: APPROVED_FOR_IMPLEMENTATION
 owner: ai_manager
 implementer: antigraviti-15
 reviewer: chatgpt
@@ -68,6 +68,6 @@ documents_to_update:
 stop_conditions:
   - "نیاز به تغییر فایل‌های خارج از allowed_paths"
 manager_approval:
-  verdict: PENDING
-  approved_at: ""
-  approval_note: "موج ۳ - ماژول فرستنده‌ها و سلامت حساب‌ها."
+  verdict: APPROVED
+  approved_at: "2026-11-10"
+  approval_note: "موج ۳ - ماژول فرستنده‌ها و سلامت حساب‌ها تصویب شد."

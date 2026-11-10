@@ -110,7 +110,7 @@ The following migration(s) have been applied:
 migrations/
   └─ 20261109000000_init_tenant_entities/
     └─ migration.sql
-      
+
 All migrations have been successfully applied.
 EXIT CODE: 0
 

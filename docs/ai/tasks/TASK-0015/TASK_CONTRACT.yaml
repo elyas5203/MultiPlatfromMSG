@@ -2,13 +2,15 @@ schema_version: 1
 task_id: TASK-0015
 title: "فاز ۱ ت — ورود با رمز عبور، نشست، تغییر و بازنشانی رمز"
 contract_revision: 1
-status: APPROVED_FOR_IMPLEMENTATION
+status: CLOSED
 owner: ai_manager
 implementer: antigraviti-elyas
 reviewer: antigraviti-15
 branch: task/TASK-0015-password-auth
 base_commit: main (پس از ثبت این قرارداد)
 worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0015
+merged_commit: 552227a
+merged_at: "2026-11-10"
 
 objective: >
   احراز هویت کارکنان با نام کاربری و رمز عبور ثابت طبق DEC-0003 در apps/core:
@@ -86,3 +88,9 @@ manager_approval:
   verdict: APPROVED
   approved_at: "2026-11-10"
   approval_note: "DEC-0003: تصمیم صریح مالک درباره ورود با رمز و اختیار پیشروی فازهای ۱ تا ۹."
+reviewer_verdict:
+  verdict: APPROVED
+  reviewer: antigraviti-15
+  commit: 4080f02bab81c9952857c826dbd8e79fcb541514
+  reviewed_at: "2026-11-10"
+  evidence_sha256: 4928B79F441CA298EC5181DBCBC3999328271AD2010EA69E30DC31899461E28F

@@ -14,11 +14,15 @@ model Tenant {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  brands     Brand[]
-  staff      Staff[]
-  teams      Team[]
-  staffTeams StaffTeam[]
-  sessions   Session[]
+  brands             Brand[]
+  staff              Staff[]
+  teams              Team[]
+  staffTeams         StaffTeam[]
+  sessions           Session[]
+  contacts           Contact[]
+  tags               Tag[]
+  contactTags        ContactTag[]
+  suppressionEntries SuppressionEntry[]
 
   @@map("tenants")
 }
@@ -112,4 +116,80 @@ model Session {
   @@index([tenantId, staffId])
   @@index([tokenHash])
   @@map("sessions")
+}
+
+model Contact {
+  id              String       @id @default(uuid())
+  tenantId        String       @map("tenant_id")
+  phoneNormalized String       @map("phone_normalized")
+  phoneRaw        String?      @map("phone_raw")
+  firstName       String?      @map("first_name")
+  lastName        String?      @map("last_name")
+  attributes      Json?        @map("attributes")
+  isSuppressed    Boolean      @default(false) @map("is_suppressed")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contactTags ContactTag[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, phoneNormalized])
+  @@index([tenantId])
+  @@index([tenantId, phoneNormalized])
+  @@map("contacts")
+}
+
+model Tag {
+  id          String       @id @default(uuid())
+  tenantId    String       @map("tenant_id")
+  name        String       @map("name")
+  color       String?      @map("color")
+  description String?      @map("description")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contactTags ContactTag[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("tags")
+}
+
+model ContactTag {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  contactId String   @map("contact_id")
+  tagId     String   @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contact Contact @relation(fields: [tenantId, contactId], references: [tenantId, id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tenantId, tagId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, contactId, tagId])
+  @@index([tenantId])
+  @@index([tenantId, contactId])
+  @@index([tenantId, tagId])
+  @@map("contact_tags")
+}
+
+model SuppressionEntry {
+  id              String   @id @default(uuid())
+  tenantId        String   @map("tenant_id")
+  phoneNormalized String   @map("phone_normalized")
+  reason          String?  @map("reason")
+  source          String?  @map("source")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, phoneNormalized])
+  @@index([tenantId])
+  @@index([tenantId, phoneNormalized])
+  @@map("suppression_entries")
 }

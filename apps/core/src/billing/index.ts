@@ -5,3 +5,4 @@
 export * from './types';
 export * from './calculator';
 export * from './ledger-engine';
+export * from './billing.repository';

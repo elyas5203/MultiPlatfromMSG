@@ -23,6 +23,9 @@ model Tenant {
   tags               Tag[]
   contactTags        ContactTag[]
   suppressionEntries SuppressionEntry[]
+  accounts           Account[]
+  ledgerEntries      LedgerEntry[]
+  creditReservations CreditReservation[]
 
   @@map("tenants")
 }
@@ -192,4 +195,74 @@ model SuppressionEntry {
   @@index([tenantId])
   @@index([tenantId, phoneNormalized])
   @@map("suppression_entries")
+}
+
+model Account {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  name        String   @map("name")
+  type        String   @default("CUSTOMER") @map("type")
+  currency    String   @default("IRR") @map("currency")
+  creditLimit BigInt   @default(0) @map("credit_limit")
+  status      String   @default("ACTIVE") @map("status")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ledgerEntries      LedgerEntry[]
+  creditReservations CreditReservation[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+  @@map("accounts")
+}
+
+model LedgerEntry {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  accountId   String   @map("account_id")
+  sequence    BigInt   @map("sequence")
+  entryType   String   @map("entry_type")
+  amount      BigInt   @map("amount")
+  purpose     String   @map("purpose")
+  referenceId String   @map("reference_id")
+  metadata    Json?    @map("metadata")
+  timestamp   DateTime @default(now()) @map("timestamp")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [tenantId, accountId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, accountId, sequence])
+  @@index([tenantId])
+  @@index([tenantId, accountId])
+  @@index([referenceId])
+  @@index([tenantId, referenceId])
+  @@map("ledger_entries")
+}
+
+model CreditReservation {
+  id             String   @id @default(uuid())
+  tenantId       String   @map("tenant_id")
+  accountId      String   @map("account_id")
+  amount         BigInt   @map("amount")
+  settledAmount  BigInt   @default(0) @map("settled_amount")
+  releasedAmount BigInt   @default(0) @map("released_amount")
+  status         String   @default("ACTIVE") @map("status")
+  purpose        String   @map("purpose")
+  referenceId    String   @map("reference_id")
+  releaseReason  String?  @map("release_reason")
+  metadata       Json?    @map("metadata")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [tenantId, accountId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+  @@index([tenantId, accountId])
+  @@index([tenantId, status])
+  @@index([referenceId])
+  @@map("credit_reservations")
 }

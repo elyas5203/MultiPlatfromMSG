@@ -1,0 +1,73 @@
+schema_version: 1
+task_id: TASK-0029
+title: "فاز ۴ ج — الگوریتم مسیریابی پیام و انتخاب خودکار حساب فرستنده"
+contract_revision: 1
+status: DRAFT
+owner: ai_manager
+implementer: antigraviti-9
+reviewer: chatgpt
+branch: task/TASK-0029-sender-routing-engine
+base_commit: main
+worktree: E:/projects/MultiPlatformMsg-agents/antigravity-9-task-0029
+
+objective: >
+  پیاده‌سازی موتور مسیریابی و انتخاب فرستنده (SenderRoutingEngine) در apps/core/src/senders
+  شامل الگوریتم‌های اولویت ارتباط متقابل (Mutual Contact)، توزیع بار میان حساب‌ها،
+  بررسی سهمیه روزانه باقیمانده، کنترل وضعیت سلامت، و خروج خودکار حساب در صورت دریافت خطای FloodWait/Ban.
+business_reason: "بیشینه‌سازی ضریب تحویل پیام‌ها و ممانعت از مسدودسازی اکانت‌های مشتریان و سازمان."
+out_of_scope:
+  - "ارسال به شبکه تلگرام"
+  - "تغییر package.json"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/MASTER_EXECUTION_LEDGER.md
+  - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+allowed_paths:
+  - "apps/core/src/senders/routing-engine.ts"
+  - "apps/core/src/senders/types.ts"
+  - "apps/core/src/senders/index.ts"
+  - "apps/core/test/sender-routing.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/prisma/**"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/billing/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "**/.env"
+change_budget:
+  max_files_changed: 4
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: true
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "پیاده‌سازی SenderRoutingEngine با متد selectOptimalSender برای انتخاب بهترین حساب بر پایه اولویت: ۱) ارتباط متقابل با مخاطب، ۲) سهمیه روزانه باقیمانده، ۳) بار کاری کمتر."
+    verification: "آزمون واحد الگوریتم با سناریوهای چندحسابی."
+  - id: AC-02
+    statement: "مسدودسازی قطعی حساب‌های در وضعیت COOLDOWN یا BANNED یا حساب‌های دارای سهمیه روزانه تکمیل‌شده."
+    verification: "آزمون فیلترینگ و سلامت حساب."
+  - id: AC-03
+    statement: "پایبندی بدون استثنا به مرز سازمان: فرستنده‌های سازمان دیگر هرگز در گزینه‌های انتخاب قرار نمی‌گیرند."
+    verification: "آزمون چندسازمانی الگوریتم مسیریابی."
+required_tests:
+  - "npm run build"
+  - "node --test dist/test/sender-routing.test.js با exit 0"
+  - "git diff --check و کنترل محدوده فایل‌ها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از تحویل، مدیر وضعیت را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به تغییر فایل‌های خارج از allowed_paths"
+manager_approval:
+  verdict: PENDING
+  approved_at: ""
+  approval_note: "موج ۳ - موتور هوشمند مسیریابی و انتخاب فرستنده."

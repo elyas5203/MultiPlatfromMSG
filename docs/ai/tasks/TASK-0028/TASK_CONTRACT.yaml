@@ -1,0 +1,74 @@
+schema_version: 1
+task_id: TASK-0028
+title: "فاز ۴ ب — هسته منطق توقف اضطراری (Kill Switch Core) و صف‌های ناهمگام پیام"
+contract_revision: 1
+status: DRAFT
+owner: ai_manager
+implementer: antigraviti-elyas
+reviewer: chatgpt
+branch: task/TASK-0028-kill-switch-core
+base_commit: main
+worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0028
+
+objective: >
+  پیاده‌سازی هسته توقف اضطراری (KillSwitchService) در apps/core/src/messaging
+  شامل ۳ رفتار ایمن: ۱) توقف پذیرش جدید (New Admissions)، ۲) مدیریت کارهای در حال پردازش (In-Flight Tasks)،
+  ۳) تعلیق مصرف صفوف (Pending Queues)، به همراه قرارداد و تعاریف رویدادهای صف پیام در RabbitMQ.
+business_reason: "تضمین توقف فوری و بدون بازگشت هرگونه ارسال پیام در شرایط اضطراری قبل از فعال‌سازی کانکتورها در فاز ۵."
+out_of_scope:
+  - "اتصال کانکتور به تلگرام یا بله (در فاز ۵)"
+  - "تغییر package.json"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/MASTER_EXECUTION_LEDGER.md
+  - docs/ai/product/DEVELOPMENT_PHASES.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+allowed_paths:
+  - "apps/core/src/messaging/kill-switch.service.ts"
+  - "apps/core/src/messaging/queue.types.ts"
+  - "apps/core/src/messaging/index.ts"
+  - "apps/core/test/kill-switch.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/billing/**"
+  - "apps/core/src/contacts/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "**/.env"
+change_budget:
+  max_files_changed: 5
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: true
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "پیاده‌سازی KillSwitchService با متدهای triggerKillSwitch، resumeExecution و getStatus با سطوح تفکیک‌یافته (Global، Tenant، Campaign، Sender)."
+    verification: "آزمون تغییر وضعیت و استعلام بلادرنگ."
+  - id: AC-02
+    statement: "اثبات رفتار ۱ (توقف پذیرش جدید): رد فوری هر درخواست ثبت پیام جدید با خطای صریح ServiceUnavailableException هنگام فعال بودن توقف."
+    verification: "آزمون پذیرش پیام جدید."
+  - id: AC-03
+    statement: "اثبات رفتار ۲ و ۳ (تکلیف کارهای جاری و تعلیق مصرف صفوف): عدم دیسپچ پیام‌های معلق و جلوگیری از ارسال مضاعف بدون حذف فیزیکی پیام‌ها از صف."
+    verification: "آزمون شبیه‌سازی صف و مصرف‌کننده."
+required_tests:
+  - "npm run build"
+  - "node --test dist/test/kill-switch.test.js با exit 0"
+  - "git diff --check و کنترل محدوده فایل‌ها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از تحویل، مدیر وضعیت را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به تغییر فایل‌های خارج از allowed_paths"
+manager_approval:
+  verdict: PENDING
+  approved_at: ""
+  approval_note: "موج ۳ - هسته توقف اضطراری پیش‌نیاز کانکتورها."

@@ -1,0 +1,73 @@
+schema_version: 1
+task_id: TASK-0027
+title: "فاز ۴ الف — ماژول فرستنده‌ها و اتصال حساب‌های تلگرام/بله به تفکیک سازمان"
+contract_revision: 1
+status: DRAFT
+owner: ai_manager
+implementer: antigraviti-15
+reviewer: chatgpt
+branch: task/TASK-0027-senders-module
+base_commit: main
+worktree: E:/projects/MultiPlatformMsg-agents/antigravity-15-task-0027
+
+objective: >
+  پیاده‌سازی مدل‌های پایگاه داده و ماژول مدیریت فرستنده‌ها (Senders) در apps/core/src/senders
+  شامل تفکیک حساب‌های متصل مشتری از حساب‌های مدیریت‌شده، ثبت وضعیت سلامت (ACTIVE, COOLDOWN, BANNED)،
+  سهمیه روزانه ارسال، و رمزنگاری نشست‌ها با SecretCryptoService.
+business_reason: "پایه‌ریزی ساختار اتصال و سلامت کانال‌های پیام‌رسانی با جداسازی سخت‌گیرانه چندسازمانی."
+out_of_scope:
+  - "اجرای فرآیند واقعی ارسال به تلگرام (در کانکتورهای فاز ۵ انجام می‌شود)"
+  - "تغییر package.json"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/MASTER_EXECUTION_LEDGER.md
+  - docs/ai/product/SENDER_ACCOUNTS_AND_ROUTING.md
+  - docs/ai/product/INTEGRATIONS_AND_CHANNELS.md
+allowed_paths:
+  - "apps/core/prisma/schema.prisma"
+  - "apps/core/prisma/migrations/20261110200000_senders_module/**"
+  - "apps/core/src/senders/**"
+  - "apps/core/test/senders.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/billing/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "**/.env"
+change_budget:
+  max_files_changed: 6
+  max_added_dependencies: 0
+  database_change_allowed: true
+  public_api_change_allowed: true
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "افزودن مدل SenderAccount به schema.prisma با ستون‌های platform, ownershipType, status, dailyQuota, sentTodayCount, sessionEncrypted, و کلید خارجی مرکب tenant_id."
+    verification: "اعتبارسنجی Prisma و migrate deploy."
+  - id: AC-02
+    statement: "پیاده‌سازی SendersRepository و SendersService با متدهای ثبت فرستنده، به‌روزرسانی سلامت، بررسی سهمیه، و رمزنگاری سشن با نسخه دوم حلقه کلید (v2)."
+    verification: "آزمون واحد مخزن و رمزنگاری."
+  - id: AC-03
+    statement: "تضمین ایزولاسیون کامل فرستنده‌های سازمانی: حساب متصل مشتری در سازمان الف هرگز نباید توسط سازمان ب دیده یا استفاده شود."
+    verification: "آزمون چندسازمانی فرستنده‌ها."
+required_tests:
+  - "npm run build"
+  - "node --test dist/test/senders.test.js با exit 0"
+  - "git diff --check و کنترل محدوده فایل‌ها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از تحویل، مدیر وضعیت را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به تغییر فایل‌های خارج از allowed_paths"
+manager_approval:
+  verdict: PENDING
+  approved_at: ""
+  approval_note: "موج ۳ - ماژول فرستنده‌ها و سلامت حساب‌ها."

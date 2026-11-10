@@ -1,0 +1,77 @@
+schema_version: 1
+task_id: TASK-0026
+title: "فاز ۳ ج — سرویس و اندپوینت‌های کیف پول، شارژ و استعلام تراکنش‌های دفترکل مالی"
+contract_revision: 1
+status: DRAFT
+owner: ai_manager
+implementer: antigraviti-14
+reviewer: chatgpt
+branch: task/TASK-0026-billing-wallet-endpoints
+base_commit: main
+worktree: E:/projects/MultiPlatformMsg-agents/antigravity-14-task-0026
+
+objective: >
+  پیاده‌سازی کنترلر، سرویس و ماژول NestJS برای مدیریت کیف پول سازمانی در apps/core/src/billing
+  شامل استعلام مانده پویا، مشاهده دفترکل تراکنش‌ها، ثبت شارژ اعتباری، و اعمال دکوراتورهای
+  RolesGuard و TenantGuard با اعتبارسنجی دقیق DTO.
+business_reason: "امکان مشاهده زنده مانده اعتبار، شارژ آنلاین و ممیزی تراکنش‌های مالی به تفکیک سازمان بدون نشت داده."
+out_of_scope:
+  - "اتصال واقعی به درگاه بانکی شاپرک (در نسخه اول از توکن آزمایشی شارژ استفاده می‌شود)"
+  - "تغییر package.json"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/MASTER_EXECUTION_LEDGER.md
+  - docs/ai/product/BILLING_AND_CREDITS.md
+  - docs/ai/product/ROLES_AND_PERMISSIONS.md
+allowed_paths:
+  - "apps/core/src/billing/billing.controller.ts"
+  - "apps/core/src/billing/billing.service.ts"
+  - "apps/core/src/billing/billing.module.ts"
+  - "apps/core/src/billing/dto/**"
+  - "apps/core/src/billing/index.ts"
+  - "apps/core/src/app.module.ts"
+  - "apps/core/test/billing-api.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/prisma/**"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/contacts/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "**/.env"
+change_budget:
+  max_files_changed: 7
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: true
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "پیاده‌سازی BillingController با اندپوینت‌های GET /billing/balance، GET /billing/ledger، POST /billing/adjust (انحصاری SA)؛ تزریق خودکار tenantId از TenantContext."
+    verification: "آزمون‌های یکپارچه‌ساز کنترلر با کدهای وضعیت استاندارد."
+  - id: AC-02
+    statement: "اعمال گارد‌های TenantGuard و RolesGuard؛ استعلام مانده برای نقش‌های OMGR, OP, AUD؛ اصلاح مانده و شارژ دستی منحصراً توسط SA؛ مسدودسازی قطعی دسترسی‌های غیرمجاز با ۴۰۳ و ۴۰۰."
+    verification: "آزمون ماتریسی دسترسی‌ها."
+  - id: AC-03
+    statement: "عدم استفاده از ممیز شناور و مدیریت مبالغ به صورت رشته‌های عددی هگز/دسیمال مبتنی بر BigInt در لایه DTO."
+    verification: "آزمون ورودی‌های اعشاری و نامعتبر."
+required_tests:
+  - "npm run build"
+  - "node --test dist/test/billing-api.test.js با exit 0"
+  - "git diff --check و کنترل محدوده فایل‌ها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از تحویل، مدیر وضعیت را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به تغییر schema یا فایل‌های خارج از allowed_paths"
+manager_approval:
+  verdict: PENDING
+  approved_at: ""
+  approval_note: "موج ۳ - اندپوینت‌های کیف پول و صورتحساب."

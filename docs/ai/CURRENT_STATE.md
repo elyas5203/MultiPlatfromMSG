@@ -2,13 +2,13 @@
 doc_id: DOC-STATE-CURRENT
 owner_domain: governance
 status: active
-version: 1.2.0
+version: 1.3.0
 last_verified_commit: HEAD
 ---
 
 # وضعیت جاری پروژه
 
-**مرحله:** توسعه کنترل‌شده فاز ۱ و فاز ۲ الف. TASK-0012 تا TASK-0017 همگی با موفقیت کامل پیاده‌سازی، آزموده و در `main` ادغام شدند.
+**مرحله:** توسعه پرسرعت موازی فاز ۱، فاز ۲ و فاز ۳. TASK-0012 تا TASK-0017 همگی با موفقیت کامل پیاده‌سازی، آزموده و در `main` ادغام شدند. ۴ مأموریت موازی جدید (TASK-0018 تا TASK-0021) فعال و به بات‌های مجری تخصیص یافتند.
 
 ## وضعیت فعلی
 
@@ -20,16 +20,18 @@ last_verified_commit: HEAD
 - نام تجاری نهایی هنوز انتخاب نشده؛ `MultiPlatformMsg` فقط نام داخلی است.
 - مخزن تمیز جدید به GitHub در `elyas5203/MultiPlatfromMSG` متصل است.
 
-## کارهای بسته‌شده موج ۱ و فاز ۲ الف
+## کارهای بسته‌شده
 
 - **TASK-0015 (احراز هویت با نام کاربری و رمز، نشست‌ها و بازنشانی رمز):** مجری `antigraviti-elyas`، بازبین `antigraviti-15` (رأی APPROVED). ادغام شد در کامیت `552227a`.
-- **TASK-0016 (حلقه کلید و چرخش Secret با AES-256-GCM v2):** مجری `antigraviti-14`. ادغام شد.
-- **TASK-0017 (ماژول مستقل جریانی خواندن و پاکسازی CSV مخاطبان):** مجری `antigraviti-9`. ادغام شد.
+- **TASK-0016 (حلقه کلید و چرخش Secret با AES-256-GCM v2):** مجری `antigraviti-14`. ادغام شد (`306c2e8`).
+- **TASK-0017 (ماژول مستقل جریانی خواندن و پاکسازی CSV مخاطبان):** مجری `antigraviti-9`. ادغام شد (`63264c8`).
 - **وضعیت آزمون‌ها:** ۸۴ آزمون مستقل واحد و یکپارچه‌ساز بدون خطا، لغو یا skip با موفقیت اجرا می‌شوند.
 
-## گام‌های بلافاصله بعدی موج ۱ و موج ۲
+## مأموریت‌های هم‌زمان جاری (۴ تسک موازی):
 
-1. **TASK-0018:** تفکیک و تزریق اجباری `tenant_id` در سطح درخواست (Middleware / Interceptor) و بستن مسیرهای بدون سازمان (`antigraviti-elyas`).
-2. **TASK-0019:** گارد نقش‌ها و مجوزهای واقعی (RBAC) روی اندپوینت‌ها بر اساس نشست کاربر (`antigraviti-14`).
-3. **TASK-0020:** سیاست‌های تفکیک چندسازمانی RLS در PostgreSQL (`antigraviti-15`).
-4. **TASK-0021:** ماژول ذخیره‌سازی مخاطبان، مدل داده لیست مخاطبان و مدیریت انصراف (Opt-out) (`antigraviti-9`).
+| شناسه | عنوان | مجری | شاخه مستقل | حوزه مجاز |
+|---|---|---|---|---|
+| **TASK-0018** | تزریق و اعتبارسنجی اجباری کانتکست چندسازمانی (Tenant Context & Middleware) | `antigraviti-14` | `task/TASK-0018-tenant-context` | `apps/core/src/tenant/**` |
+| **TASK-0019** | گارد کنترل دسترسی مبتنی بر نقش (RBAC Guards & Roles Matrix) | `antigraviti-15` | `task/TASK-0019-rbac-guards` | `apps/core/src/rbac/**` |
+| **TASK-0020** | مدل داده، مایگریشن مخاطبان، برچسب‌ها و انصراف (Contacts & Suppression DB) | `antigraviti-elyas` | `task/TASK-0020-contacts-schema` | `apps/core/prisma/**`, `apps/core/src/contacts/**` |
+| **TASK-0021** | موتور محاسباتی دفترکل غیرقابل‌تغییر مالی و رزرو اعتبار (Billing Ledger Math Engine) | `antigraviti-9` | `task/TASK-0021-billing-ledger-engine` | `apps/core/src/billing/**` |

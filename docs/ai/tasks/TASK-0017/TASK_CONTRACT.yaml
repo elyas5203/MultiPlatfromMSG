@@ -1,0 +1,84 @@
+schema_version: 1
+task_id: TASK-0017
+title: "فاز ۲ الف — ماژول مستقل خواندن و پاکسازی فایل CSV مخاطبان"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-elyas
+reviewer: mausbot_manager_interim
+branch: task/TASK-0017-contacts-csv-import
+base_commit: main (پس از ثبت این قرارداد)
+worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0017
+
+objective: >
+  یک کتابخانه خالص (بدون پایگاه داده، بدون Endpoint، بدون dependency جدید) در
+  apps/core که محتوای CSV مخاطبان را می‌خواند، شماره‌ها را نرمال و اعتبارسنجی
+  می‌کند، تکراری‌ها را حذف می‌کند و گزارش ردیف‌به‌ردیف خطا می‌دهد. XLSX و
+  ذخیره در پایگاه در Taskهای بعدی می‌آیند.
+business_reason: "شروع ایزوله فاز ۲ بدون وابستگی به schema تا هم‌زمان با احراز هویت جلو برود."
+out_of_scope:
+  - "XLSX، ذخیره‌سازی، schema، Endpoint، بارگذاری فایل، رضایت/انصراف در پایگاه"
+  - "تغییر package.json یا افزودن dependency"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/decisions/DEC-0003-password-login-and-wave-authority.md
+  - docs/ai/product/REQUIREMENTS_INDEX.md
+  - docs/ai/product/DEVELOPMENT_PHASES.md
+allowed_paths:
+  - "apps/core/src/contacts-import/**"
+  - "apps/core/test/contacts-import*.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/prisma/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/security/**"
+  - "**/.env"
+change_budget:
+  max_files_changed: 8
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "تجزیه‌گر CSV مطابق RFC 4180: نقل‌قول، ویرگول و خط جدید داخل نقل‌قول، CRLF/LF، BOM UTF-8، جداکننده ویرگول یا نقطه‌ویرگول، سطر خالی. پردازش به‌صورت جریانی/تکه‌ای است و فایل ۱۰۰٬۰۰۰ ردیفی بدون بارگذاری همه ردیف‌های خام در یک آرایه اضافه پردازش می‌شود."
+    verification: "آزمون واحد و آزمون ۱۰۰٬۰۰۰ ردیف ساختگی."
+  - id: AC-02
+    statement: "ستون شماره با سرستون فارسی یا انگلیسی رایج (مثلاً شماره، موبایل، تلفن، phone، mobile) یا در نبود سرستون با ستون اول تشخیص داده می‌شود؛ ستون‌های نام اختیاری حفظ می‌شوند. فایل ساده تک‌ستونه فقط شماره پذیرفته می‌شود."
+    verification: "آزمون واحد."
+  - id: AC-03
+    statement: "نرمال‌سازی شماره موبایل ایران به قالب واحد +989XXXXXXXXX از ورودی‌های 09…، 9…، 989…، +989…، 00989…، با ارقام فارسی/عربی، فاصله، خط تیره و پرانتز. ورودی نامعتبر با کد دلیل مشخص رد می‌شود و حدس زده نمی‌شود."
+    verification: "آزمون جدولی مثبت و منفی."
+  - id: AC-04
+    statement: "حذف تکراری بر اساس شماره نرمال‌شده (اولین ردیف می‌ماند). خروجی شامل ردیف‌های معتبر، فهرست ردیف‌های ردشده با شماره ردیف و کد دلیل، و خلاصه شمارش (کل، معتبر، تکراری، نامعتبر) است. سقف تعداد ردیف پارامتر ورودی است، نه عدد ثابت در کد."
+    verification: "آزمون واحد."
+  - id: AC-05
+    statement: "هیچ شماره کامل در پیام خطا یا لاگ نمی‌آید (حداکثر ماسک‌شده)؛ داده آزمون کاملاً ساختگی است."
+    verification: "بازرسی کد و آزمون."
+required_tests:
+  - "npm ci و npm run build"
+  - "node --test روی فایل‌های dist/test/contacts-import*.test.js با exit 0"
+  - "npm test کامل موجود روی PostgreSQL آزمایشی تازه با نشانگر ایمنی، exit 0، صفر skip"
+  - "git diff --check و کنترل مسیرها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از رأی بازبین، مدیر گزارش‌ها و وضعیت پروژه را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به dependency، schema یا فایل خارج از allowed_paths"
+  - "نیاز به داده واقعی مخاطب"
+  - "ناتوانی در اجرای آزمون اجباری"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-10"
+  approval_note: "DEC-0003؛ برش مستقل فاز ۲ بدون تصمیم باز مالک."

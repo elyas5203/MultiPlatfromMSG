@@ -1,0 +1,80 @@
+schema_version: 1
+task_id: TASK-0016
+title: "فاز ۱ ث — حلقه کلید نسخه‌دار و چرخش کلید رمزنگاری Secret"
+contract_revision: 1
+status: APPROVED_FOR_IMPLEMENTATION
+owner: ai_manager
+implementer: antigraviti-elyas
+reviewer: mausbot_manager_interim
+branch: task/TASK-0016-key-ring
+base_commit: main (پس از ثبت این قرارداد)
+worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0016
+
+objective: >
+  روی ابزار AES-256-GCM موجود (TASK-0014) یک حلقه کلید نسخه‌دار بساز: بارگذاری
+  کلیدها از متغیر محیطی، شناسه کلید در خروجی رمزشده، رمزگذاری با کلید فعال،
+  بازیابی با هر کلید شناخته‌شده و تابع بازرمزگذاری برای چرخش.
+business_reason: "فاز ۱ نگهداری و چرخش کلید را لازم دارد؛ گزارش TASK-0014 آن را باز گذاشته است."
+out_of_scope:
+  - "KMS/HSM خارجی، ذخیره کلید در پایگاه، Endpoint، schema، dependency جدید"
+  - "تغییر package.json (آزمون این Task پس از ادغام TASK-0015 خودکار در npm test می‌آید)"
+must_read:
+  - docs/ai/START_HERE.md
+  - docs/ai/CURRENT_STATE.md
+  - docs/ai/governance/CODER_PROTOCOL.md
+  - docs/ai/governance/ABSOLUTE_PROHIBITIONS.md
+  - docs/ai/decisions/DEC-0003-password-login-and-wave-authority.md
+  - docs/ai/tasks/TASK-0014/IMPLEMENTATION_REPORT.md
+  - docs/ai/tasks/TASK-0014/REVIEW_REPORT.md
+allowed_paths:
+  - "apps/core/src/security/key-ring.ts"
+  - "apps/core/src/security/secret-crypto.ts"
+  - "apps/core/test/key-ring.test.ts"
+blocked_paths:
+  - "docs/ai/**"
+  - "apps/core/prisma/**"
+  - "apps/core/package.json"
+  - "apps/core/package-lock.json"
+  - "apps/core/src/auth/**"
+  - "apps/core/src/contacts-import/**"
+  - "**/.env"
+change_budget:
+  max_files_changed: 3
+  max_added_dependencies: 0
+  database_change_allowed: false
+  public_api_change_allowed: false
+  deployment_change_allowed: false
+acceptance_criteria:
+  - id: AC-01
+    statement: "حلقه کلید از یک ورودی پیکربندی (رشته env با چند کلید ۳۲ بایتی base64 و شناسه هرکدام، به‌علاوه شناسه کلید فعال) ساخته می‌شود؛ پیکربندی خالی، کلید با طول نادرست، شناسه تکراری یا کلید فعال ناشناخته با خطای عمومی و بدون افشای مقدار رد می‌شود (fail closed)."
+    verification: "آزمون واحد."
+  - id: AC-02
+    statement: "خروجی رمزشده شناسه کلید را در قالب نسخه‌دار حمل می‌کند و شناسه کلید در AAD بسته است؛ بازیابی با کلید درست از حلقه انجام می‌شود و شناسه ناشناخته یا دستکاری‌شده رد می‌شود. خروجی‌های قالب TASK-0014 یا همچنان خوانده می‌شوند یا ناسازگاری صریحاً آزموده و در گزارش ثبت می‌شود."
+    verification: "آزمون واحد round-trip، tampering و سازگاری."
+  - id: AC-03
+    statement: "تابع بازرمزگذاری، مقدار رمزشده با کلید قدیمی را با کلید فعال دوباره رمز می‌کند و جداسازی tenant/purpose حفظ می‌شود؛ پس از حذف کلید قدیمی از حلقه، مقدار قدیمی دیگر باز نمی‌شود."
+    verification: "آزمون واحد چرخش."
+  - id: AC-04
+    statement: "شش آزمون secret-crypto موجود بدون تغییر رفتار قبول می‌مانند؛ هیچ کلید یا Secret در خطا/لاگ نیست."
+    verification: "npm ci، npm run build، node --test dist/test/key-ring.test.js dist/test/secret-crypto.test.js و npm test کامل."
+required_tests:
+  - "npm ci و npm run build"
+  - "node --test dist/test/key-ring.test.js dist/test/secret-crypto.test.js با exit 0"
+  - "npm test کامل روی PostgreSQL آزمایشی تازه با نشانگر ایمنی، exit 0، صفر skip"
+  - "git diff --check و کنترل مسیرها"
+required_evidence:
+  - changed_files
+  - diff_summary
+  - test_commands_and_results
+  - scope_check
+  - residual_risks
+  - rollback_note
+documents_to_update:
+  - "پس از رأی بازبین، مدیر گزارش‌ها و وضعیت پروژه را ثبت می‌کند."
+stop_conditions:
+  - "نیاز به کلید واقعی، dependency، schema یا فایل خارج از allowed_paths"
+  - "ناتوانی در اجرای آزمون اجباری"
+manager_approval:
+  verdict: APPROVED
+  approved_at: "2026-11-10"
+  approval_note: "DEC-0003؛ بدون Gate باز مالک."

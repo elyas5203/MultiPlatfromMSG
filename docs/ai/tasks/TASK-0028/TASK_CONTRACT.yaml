@@ -1,14 +1,14 @@
 schema_version: 1
 task_id: TASK-0028
 title: "فاز ۴ ب — هسته منطق توقف اضطراری (Kill Switch Core) و صف‌های ناهمگام پیام"
-contract_revision: 1
-status: DRAFT
+contract_revision: 2
+status: APPROVED_FOR_IMPLEMENTATION
 owner: ai_manager
-implementer: antigraviti-elyas
+implementer: antigraviti-9
 reviewer: chatgpt
 branch: task/TASK-0028-kill-switch-core
 base_commit: main
-worktree: E:/projects/MultiPlatformMsg-agents/elyas-task-0028
+worktree: E:/projects/MultiPlatformMsg-agents/antigravity-9-task-0028
 
 objective: >
   پیاده‌سازی هسته توقف اضطراری (KillSwitchService) در apps/core/src/messaging
@@ -38,37 +38,6 @@ blocked_paths:
   - "apps/core/package-lock.json"
   - "**/.env"
 change_budget:
-  max_files_changed: 5
+  max_files_changed: 4
   max_added_dependencies: 0
   database_change_allowed: false
-  public_api_change_allowed: true
-  deployment_change_allowed: false
-acceptance_criteria:
-  - id: AC-01
-    statement: "پیاده‌سازی KillSwitchService با متدهای triggerKillSwitch، resumeExecution و getStatus با سطوح تفکیک‌یافته (Global، Tenant، Campaign، Sender)."
-    verification: "آزمون تغییر وضعیت و استعلام بلادرنگ."
-  - id: AC-02
-    statement: "اثبات رفتار ۱ (توقف پذیرش جدید): رد فوری هر درخواست ثبت پیام جدید با خطای صریح ServiceUnavailableException هنگام فعال بودن توقف."
-    verification: "آزمون پذیرش پیام جدید."
-  - id: AC-03
-    statement: "اثبات رفتار ۲ و ۳ (تکلیف کارهای جاری و تعلیق مصرف صفوف): عدم دیسپچ پیام‌های معلق و جلوگیری از ارسال مضاعف بدون حذف فیزیکی پیام‌ها از صف."
-    verification: "آزمون شبیه‌سازی صف و مصرف‌کننده."
-required_tests:
-  - "npm run build"
-  - "node --test dist/test/kill-switch.test.js با exit 0"
-  - "git diff --check و کنترل محدوده فایل‌ها"
-required_evidence:
-  - changed_files
-  - diff_summary
-  - test_commands_and_results
-  - scope_check
-  - residual_risks
-  - rollback_note
-documents_to_update:
-  - "پس از تحویل، مدیر وضعیت را ثبت می‌کند."
-stop_conditions:
-  - "نیاز به تغییر فایل‌های خارج از allowed_paths"
-manager_approval:
-  verdict: PENDING
-  approved_at: ""
-  approval_note: "موج ۳ - هسته توقف اضطراری پیش‌نیاز کانکتورها."

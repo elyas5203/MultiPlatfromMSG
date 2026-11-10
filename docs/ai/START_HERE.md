@@ -3,7 +3,7 @@ doc_id: DOC-GOV-START
 owner_domain: governance
 status: active
 version: 2.0.0
-last_verified_commit: pending-first-commit
+last_verified_commit: e7eb28d9550b3c03529d1d29fa9f5c0fe0725feb
 ---
 
 # نقطه شروع اجباری تمام هوش‌های مصنوعی
@@ -32,6 +32,7 @@ last_verified_commit: pending-first-commit
 - نبایدهای مطلق: `docs/ai/governance/ABSOLUTE_PROHIBITIONS.md`
 - چرخه اجباری هر کار: `docs/ai/governance/TASK_LIFECYCLE.md`
 - مدل همکاری تیم هوش مصنوعی: `docs/ai/governance/AI_TEAM_OPERATING_MODEL.md`
+- راهنمای ادامه در قطع دسترسی مدیر: `docs/ai/governance/CONTINUATION_HANDOFF.md`
 - محدوده نسخه اول: `docs/ai/product/VERSION_ONE_SCOPE.md`
 - معماری کلان: `docs/ai/architecture/SYSTEM_CONTEXT.md`
 

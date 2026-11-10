@@ -12,6 +12,7 @@ sections:
     summary: "نقش‌ها، مجوزها، نبایدها، شواهد و چرخه مأموریت"
     index: docs/ai/governance/GOVERNANCE_MANIFEST.yaml
     team_operating_model: docs/ai/governance/AI_TEAM_OPERATING_MODEL.md
+    continuation_handoff: docs/ai/governance/CONTINUATION_HANDOFF.md
     context_coverage: docs/ai/CONTEXT_COVERAGE.md
   product:
     summary: "تعریف محصول، محدوده نسخه اول و موارد خارج از محدوده"

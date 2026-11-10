@@ -37,6 +37,10 @@ version: 1.0.0
 
 - اسکلت محلی Core و آزمون مرز سازمانی → `apps/core` + `docs/ai/tasks/TASK-0012/IMPLEMENTATION_REPORT.md` و `REVIEW_REPORT.md` (`TASK-0012`, CLOSED)؛ سه دور رفع ایراد و بازبینی مستقل، رأی نهایی `APPROVED`، ادغام با `git merge --no-ff` در `main`. فاز ۱ الف تکمیل شد؛ جداسازی پایگاه داده تولیدی هنوز پایلوت/تست نشده.
 
+- پایگاه داده آزمایشی PostgreSQL، موجودیت‌های پایه سازمانی و مرز Repository → `apps/core` + `docs/ai/tasks/TASK-0013/` (`TASK-0013`, CLOSED). آزمون یکپارچه روی پایگاه آزمایشی گزارش و بازبینی شد؛ این نتیجه اثبات RLS یا جداسازی در تولید نیست.
+
+- ابزار مستقل AES-256-GCM برای Secret → `apps/core/src/security/secret-crypto.ts` + `docs/ai/tasks/TASK-0014/` (`TASK-0014`, CLOSED). شواهد ۳۶ آزمون موفق در `TEST_EVIDENCE.txt` است؛ مدیریت و چرخش کلید هنوز اجرا نشده است.
+
 - گزارش نهایی آمادگی Gate 0 → `docs/ai/tasks/TASK-0011/GATE_ZERO_READINESS.md` (`TASK-0011`, CLOSED)؛ ۱۲ هدف و F-01 تا F-06 بازبینی شدند. نخستین قرارداد توسعه `TASK-0012` فقط اسکلت محلی و آزمون مرز سازمانی را مجاز می‌کند.
 
 - قراردادهای تحلیلی API، Webhook، گفتینو و پیامک → `docs/ai/tasks/TASK-0010/INTEGRATION_CONTRACTS_ANALYSIS.md` (`TASK-0010`, CLOSED)؛ جزئیات اجرایی و توان واقعی سرویس‌ها باز است.
